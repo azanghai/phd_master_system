@@ -121,6 +121,7 @@
       if (['life-domain', 'wellbeing-section', 'habit-section', 'support-section', 'care-section', 'mentor-section', 'review-section'].includes(routeId)) return '生活';
       if (['insights-domain', 'dashboard-section', 'achievement-section'].includes(routeId)) return '洞察';
       if (routeId === 'home-section') return copy.todayLabel;
+      if (routeId === 'reminder-section') return '提醒';
       if (routeId === 'launcher-section') return copy.todayLabel;
       return '工作台';
     }

@@ -1,4 +1,4 @@
-export const SYNC_SCHEMA_VERSION = 1;
+export const SYNC_SCHEMA_VERSION = 2;
 export const SYNC_ROOT_DIR = "phd-workspace-sync";
 export const MANIFEST_FILE = "manifest.json";
 export const SYNC_LOCK_TTL_MS = 60 * 1000;

@@ -100,7 +100,7 @@ const STORAGE_KEY = 'phd_master_workspace_merged_v1';
     ];
     const LEGACY_REMOVED_HABITS = new Set(['habit_reading','habit_writing','habit_phone_control','habit_food_journal','habit_mind_record']);
 
-    const APP_SCHEMA_VERSION = 4;
+    const APP_SCHEMA_VERSION = 5;
     const PROJECT_ORIGIN_TYPES = ['manual','thesis','submission','mentor'];
     const TASK_ORIGIN_TYPES = ['manual','review','mentor','schedule','project'];
     const WORKSPACE_NAME = '学术工作台';
@@ -266,6 +266,7 @@ const STORAGE_KEY = 'phd_master_workspace_merged_v1';
     const $ = (id) => document.getElementById(id);
     const SECTION_ROUTES = {
       'home-section': ['home-section'],
+      'reminder-section': ['reminder-section'],
       'execution-section': ['execution-section'],
       'workflow-section': ['workflow-section'],
       'reimb-section': ['reimb-section'],
@@ -1025,6 +1026,24 @@ const STORAGE_KEY = 'phd_master_workspace_merged_v1';
       return Array.isArray(source) ? source.map(normalizeSubmissionItem).filter(Boolean) : [];
     }
 
+    function normalizeRemindersState(reminders) {
+      const source = reminders && typeof reminders === 'object' ? reminders : {};
+      const dismissed = source.dismissedBySourceId && typeof source.dismissedBySourceId === 'object' ? source.dismissedBySourceId : {};
+      const snoozed = source.snoozedBySourceId && typeof source.snoozedBySourceId === 'object' ? source.snoozedBySourceId : {};
+      return {
+        dismissedBySourceId: Object.fromEntries(Object.entries(dismissed).map(([key, value]) => [String(key), String(value || nowDateTime())])),
+        snoozedBySourceId: Object.fromEntries(Object.entries(snoozed).map(([key, value]) => [String(key), String(value || '')]).filter(([, value]) => value)),
+        manual: Array.isArray(source.manual) ? source.manual.map(item => ({
+          id: String(item?.id || uid('rem')),
+          title: String(item?.title || '').trim() || '未命名提醒',
+          dueDate: String(item?.dueDate || todayStr()),
+          note: String(item?.note || ''),
+          done: item?.done === true,
+          createdAt: String(item?.createdAt || nowDateTime())
+        })) : []
+      };
+    }
+
     function legacyMoodToCareMood(rawMood) {
       const mood = String(rawMood || '');
       if (['\ud83d\ude2d','\ud83d\ude23'].includes(mood)) return 'overloaded';
@@ -1419,7 +1438,8 @@ const STORAGE_KEY = 'phd_master_workspace_merged_v1';
         reviewDaily: normalizeDailyReviewState(parsed.reviewDaily, parsed.reflections),
         submissions: normalizeSubmissions(parsed.submissions),
         reimb: normalizeReimbState(parsed.reimb),
-        thesis: normalizeThesisState(parsed.thesis)
+        thesis: normalizeThesisState(parsed.thesis),
+        reminders: normalizeRemindersState(parsed.reminders)
       };
       nextState.tasks = nextState.tasks.map(task => {
         const normalized = normalizeTaskItem(task);

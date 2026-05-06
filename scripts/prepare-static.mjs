@@ -32,6 +32,7 @@ html = html.replace(
   `<script src="./scripts/state-migration.js"></script>
   <script src="./scripts/navigation.js"></script>
   <script src="./scripts/domain-renderers.js"></script>
+  <script src="./scripts/reminders-search.js"></script>
   <script src="./scripts/bindings.js"></script>
   <script type="module" src="./sync/ui.js"></script>`
 );

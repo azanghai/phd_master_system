@@ -447,7 +447,10 @@
       let end = parseHM($('scheduleTaskEnd').value);
       const title = $('scheduleTaskTitle').value.trim() || task?.title || '';
       if (start && !end && task?.estimate) end = addMinutesToHM(start, task.estimate);
-      if (!start || !end || !title) { alert('请选择任务或填写标题，并设置开始 / 结束时间。'); return; }
+      if (!start || !end || !title) {
+        setFormStatus('scheduleFormStatus', '请选择任务或填写标题，并设置开始 / 结束时间。', 'error');
+        return;
+      }
       getDayTimeBlocks(date).push({
         id: uid('block'),
         taskId: task?.id || '',
@@ -461,6 +464,7 @@
         if (task.gtdBucket === 'inbox') task.gtdBucket = 'next';
       }
       $('scheduleTaskTitle').value = '';
+      setFormStatus('scheduleFormStatus', `已排入 ${date} ${start} - ${end}。`, 'success');
       saveState();
       renderAll();
     }
@@ -591,8 +595,12 @@
 
     function addWorkflowProject() {
       const title = $('workflowProjectTitle').value.trim();
-      if (!title) { alert('请填写项目名。'); return; }
-      state.projects.unshift(normalizeProjectItem({
+      if (!title) {
+        setFormStatus('workflowProjectStatus', '请先填写项目名。', 'error');
+        $('workflowProjectTitle')?.focus();
+        return;
+      }
+      const project = normalizeProjectItem({
         id: uid('proj'),
         title,
         outcome: $('workflowProjectOutcome').value.trim(),
@@ -602,22 +610,31 @@
         deadline: $('workflowProjectDeadline').value || '',
         createdAt: nowDateTime(),
         updatedAt: nowDateTime()
-      }));
+      });
+      state.projects.unshift(project);
+      workflowSelectedProjectId = project.id;
       $('workflowProjectTitle').value = '';
       $('workflowProjectOutcome').value = '';
       if ($('workflowProjectStartDate')) $('workflowProjectStartDate').value = todayStr();
       $('workflowProjectDeadline').value = '';
+      if ($('workflowCaptureProject')) $('workflowCaptureProject').value = project.id;
+      setFormStatus('workflowProjectStatus', `已创建并选中：${project.title}`, 'success');
+      setFormStatus('workflowTaskStatus', `下一条任务会默认归入：${project.title}`, 'info');
       saveState();
       renderAll();
     }
 
     function addWorkflowCaptureTask() {
       const title = $('workflowCaptureText').value.trim();
-      if (!title) { alert('请先填写任务名称。'); return; }
+      if (!title) {
+        setFormStatus('workflowTaskStatus', '请先填写任务名称。', 'error');
+        $('workflowCaptureText')?.focus();
+        return;
+      }
       const projectId = $('workflowCaptureProject')?.value || workflowSelectedProjectId || '';
       const estimate = Math.max(0, Number($('workflowCaptureEstimate')?.value) || 25);
       const status = taskStatusMeta($('workflowCaptureStatus')?.value).value;
-      createTask({
+      const task = createTask({
         title,
         projectId,
         status,
@@ -635,6 +652,7 @@
       if ($('workflowCaptureQuadrant')) $('workflowCaptureQuadrant').value = 'q2';
       if ($('workflowCaptureStatus')) $('workflowCaptureStatus').value = 'planned';
       if ($('workflowCaptureProject')) $('workflowCaptureProject').value = workflowSelectedProjectId || '';
+      setFormStatus('workflowTaskStatus', `已新增任务：${task.title}`, 'success');
       saveState();
       renderAll();
     }
@@ -1627,6 +1645,22 @@
     function saveMentorEntry() {
       const date = $('mentorDate').value || todayStr();
       const existing = mentorEntryOn(date);
+      const hasContent = [
+        'mentorTopic',
+        'mentorEvidence',
+        'mentorAsk',
+        'mentorRisk',
+        'mentorFeedback',
+        'mentorCommitment',
+        'mentorConfirmation',
+        'mentorBoundary',
+        'mentorNextAction'
+      ].some(id => String($(id)?.value || '').trim());
+      if (!hasContent) {
+        setFormStatus('mentorFormStatus', '至少写下一项沟通内容后再保存。', 'error');
+        $('mentorTopic')?.focus();
+        return;
+      }
       const nextEntry = normalizeMentorEntry({
         status: $('mentorStatus').value,
         channel: $('mentorChannel').value,
@@ -1648,6 +1682,7 @@
         updatedAt: nowDateTime()
       });
       state.mentor.entries[date] = nextEntry;
+      setFormStatus('mentorFormStatus', `已保存 ${dayLabel(date)} 的${workspaceCopy().guidanceLabel}记录。`, 'success');
       saveState();
       renderAll();
     }
@@ -1864,10 +1899,12 @@
       const date = $('reviewDate').value || todayStr();
       const nextEntry = buildDailyReviewEntryFromForm(date, { keepTaskIds:true });
       if (!reviewContentCount(nextEntry)) {
-        alert('至少写下一条核心成果、未竟分析、学术洞见、障碍对策或明日优先任务，再保存复盘。');
+        setFormStatus('reviewFormStatus', '至少写下一条复盘内容或明日优先任务。', 'error');
+        $('reviewAccomplishments')?.focus();
         return;
       }
       state.reviewDaily.entries[date] = nextEntry;
+      setFormStatus('reviewFormStatus', `已保存 ${dayLabel(date)} 的复盘。`, 'success');
       saveState();
       renderAll();
     }
@@ -2428,9 +2465,16 @@
     function addSubmissionLog() {
       const id = $('submissionLogProject').value;
       const item = state.submissions.find(sub => sub.id === id);
-      if (!item) { alert('请先选择投稿项目。'); return; }
+      if (!item) {
+        setFormStatus('submissionLogStatus', '请先选择投稿项目。', 'error');
+        return;
+      }
       const note = $('submissionLogNote').value.trim();
-      if (!note) { alert('请填写推进日志内容。'); return; }
+      if (!note) {
+        setFormStatus('submissionLogStatus', '请填写推进日志内容。', 'error');
+        $('submissionLogNote')?.focus();
+        return;
+      }
       item.logs = Array.isArray(item.logs) ? item.logs : [];
       item.logs.unshift({
         id: uid('sublog'),
@@ -2444,6 +2488,7 @@
       item.updatedAt = nowDateTime();
       $('submissionLogNote').value = '';
       $('submissionLogMinutes').value = '';
+      setFormStatus('submissionLogStatus', `已添加 ${item.title} 的推进日志。`, 'success');
       syncSubmissionProject(item);
       saveState();
       renderAll();
@@ -2851,6 +2896,7 @@
         ['导师沟通', Object.keys(state.mentor?.entries || {}).filter(date => mentorCountOn(date)).length],
         ['学术复盘', Object.keys(state.reviewDaily?.entries || {}).filter(date => reviewCountOn(date)).length],
         ['投稿项目', state.submissions.length],
+        ['站内提醒', typeof collectReminderRows === 'function' ? collectReminderRows({ days:30 }).length : 0],
         ['待报销', state.reimb?.pending?.length || 0],
         ['已报销', state.reimb?.done?.length || 0],
         ['论文日志', state.thesis?.logs?.length || 0]
@@ -2884,13 +2930,23 @@
       location.reload();
     }
 
+    function setFormStatus(id, message = '', tone = 'info') {
+      const el = $(id);
+      if (!el) return;
+      el.textContent = message || '';
+      if (message) el.dataset.tone = tone || 'info';
+      else delete el.dataset.tone;
+    }
+
     function openEditDialog(config) {
       editContext = config;
       $('editDialogTitle').textContent = config.title || '编辑记录';
       $('editDialogDesc').textContent = config.desc || '';
       $('editDialogBody').innerHTML = (config.fields || []).map(field => {
+        const fieldType = field.type || 'text';
+        const inputClass = 'w-full px-3 py-3 rounded-2xl border border-calm-line bg-white';
         if (field.type === 'textarea') {
-          return `<label class="block"><div class="text-sm font-bold mb-1">${field.label}</div><textarea data-edit-field="${field.name}" rows="${field.rows||4}" class="w-full px-3 py-3 rounded-2xl border border-calm-line bg-white">${escapeHtml(field.value||'')}</textarea></label>`;
+          return `<label class="block"><div class="text-sm font-bold mb-1">${field.label}</div><textarea data-edit-field="${field.name}" rows="${field.rows||4}" class="${inputClass}" placeholder="${escapeHtml(field.placeholder || '')}">${escapeHtml(field.value||'')}</textarea></label>`;
         }
         if (field.type === 'select') {
           const options = Array.isArray(field.options) ? field.options : [];
@@ -2900,12 +2956,22 @@
             const label = String(opt?.label ?? value);
             return `<option value="${escapeHtml(value)}" ${value===current ? 'selected' : ''}>${escapeHtml(label)}</option>`;
           }).join('');
-          return `<label class="block"><div class="text-sm font-bold mb-1">${field.label}</div><select data-edit-field="${field.name}" class="w-full px-3 py-3 rounded-2xl border border-calm-line bg-white font-semibold">${html}</select></label>`;
+          return `<label class="block"><div class="text-sm font-bold mb-1">${field.label}</div><select data-edit-field="${field.name}" class="${inputClass} font-semibold">${html}</select></label>`;
         }
-        return `<label class="block"><div class="text-sm font-bold mb-1">${field.label}</div><input data-edit-field="${field.name}" type="${field.type||'text'}" value="${escapeHtml(field.value||'')}" class="w-full px-3 py-3 rounded-2xl border border-calm-line bg-white"></label>`;
+        return `<label class="block"><div class="text-sm font-bold mb-1">${field.label}</div><input data-edit-field="${field.name}" type="${fieldType}" value="${escapeHtml(field.value||'')}" min="${escapeHtml(field.min ?? '')}" max="${escapeHtml(field.max ?? '')}" step="${escapeHtml(field.step ?? '')}" class="${inputClass}" placeholder="${escapeHtml(field.placeholder || '')}"></label>`;
       }).join('');
       $('btnDeleteRecord').style.display = config.onDelete ? 'inline-flex' : 'none';
       $('editDialog').showModal();
+      const firstField = $('editDialogBody').querySelector('[data-edit-field]');
+      setTimeout(() => firstField?.focus(), 30);
+      $('editDialogBody').querySelectorAll('textarea').forEach(el => {
+        el.onkeydown = (e) => {
+          if ((e.ctrlKey || e.metaKey) && e.key === 'Enter') {
+            e.preventDefault();
+            $('btnSaveRecord')?.click();
+          }
+        };
+      });
     }
     function closeEditDialog() { $('editDialog').close(); editContext = null; }
     function collectEditValues() {
@@ -3298,6 +3364,7 @@
       renderMentor();
       renderReview();
       renderReviewThemeStats();
+      if (typeof renderExperienceUpgradePanels === 'function') renderExperienceUpgradePanels();
       renderAchievements();
       renderAchievementRangeStats();
       renderSubmissionBoard();

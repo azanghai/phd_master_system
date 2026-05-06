@@ -356,6 +356,31 @@
     .mood-chip { cursor: pointer; transition: transform .18s ease; }
     .mood-chip:hover, .mood-chip.active { transform: scale(1.12); }
     .pill { border-radius: 999px; padding: .2rem .55rem; font-size: .72rem; font-weight: 700; }
+    .form-status {
+      min-height: 1.35rem;
+      font-size: .78rem;
+      font-weight: 800;
+      color: var(--workspace-muted);
+    }
+    .form-status[data-tone="success"] { color: var(--workspace-success); }
+    .form-status[data-tone="error"] { color: var(--workspace-danger); }
+    .form-status[data-tone="info"] { color: var(--workspace-accent-soft); }
+    .edit-dialog-shell {
+      max-height: min(86vh, 760px);
+      display: flex;
+      flex-direction: column;
+    }
+    .edit-dialog-body {
+      overflow: auto;
+      padding-right: .15rem;
+    }
+    .edit-dialog-actions {
+      position: sticky;
+      bottom: 0;
+      background: linear-gradient(180deg, rgba(255,255,255,.82), #fff 35%);
+      border-top: 1px solid #ECEEF5;
+      padding-top: 1rem;
+    }
     .kanban-col { min-height: 220px; }
     .scroll-thin::-webkit-scrollbar { width: 8px; height: 8px; }
     .scroll-thin::-webkit-scrollbar-thumb { background: rgba(255,140,66,.35); border-radius: 999px; }
@@ -1178,6 +1203,52 @@
       #appLayout.layout-sidebar-hidden #sidebar { display: block !important; }
     }
 
+    /* Experience upgrade: calmer academic cockpit tokens */
+    :root {
+      --workspace-accent: #225c4d;
+      --workspace-highlight: #225c4d;
+      --workspace-radius: 1rem;
+      --workspace-radius-sm: .75rem;
+      --workspace-shadow: 0 18px 46px -38px rgba(23, 31, 27, .24);
+      --workspace-shadow-soft: 0 12px 28px -24px rgba(23, 31, 27, .18);
+    }
+    .soft-card,
+    .small-stat,
+    .subtle-panel,
+    .action-tile,
+    .editor-shell,
+    .cockpit-panel {
+      border-radius: var(--workspace-radius-sm) !important;
+      box-shadow: var(--workspace-shadow-soft) !important;
+    }
+    button,
+    input,
+    select,
+    textarea,
+    .pill,
+    .status-pill {
+      border-radius: .75rem !important;
+    }
+    .text-dopamine-orange,
+    .text-dopamine-pink,
+    .text-dopamine-purple,
+    .text-dopamine-sky { color: var(--workspace-accent) !important; }
+    .bg-dopamine-orange,
+    .bg-dopamine-pink,
+    .bg-dopamine-purple,
+    .bg-dopamine-sky { background: var(--workspace-accent) !important; }
+    .bg-dopamine-mint { background: var(--workspace-success) !important; }
+    .cockpit-grid { grid-template-columns: repeat(auto-fit, minmax(260px, 1fr)); }
+    .cockpit-panel { min-height: 0; }
+    .cockpit-hero-meta button {
+      padding: 6px 10px;
+      border: 1px solid var(--cockpit-line);
+      background: #fbfcf9;
+      color: var(--cockpit-accent);
+    }
+    #globalSearchDialog::backdrop,
+    #editDialog::backdrop { background: rgba(15, 23, 42, .42); backdrop-filter: blur(8px); }
+
   </style>
 </head>
 <body theme-mode="light" class="font-sans text-calm-ink p-4 md:p-6 lg:p-8">
@@ -1247,6 +1318,7 @@
         <div class="cockpit-nav-group">
           <div class="cockpit-nav-label">今日</div>
           <button class="nav-btn active" data-target="home-section"><i class="fa-solid fa-house"></i><span>今日</span></button>
+          <button class="nav-btn" data-target="reminder-section"><i class="fa-regular fa-bell"></i><span>提醒</span></button>
         </div>
         <div class="cockpit-nav-group">
           <div class="cockpit-nav-label">执行</div>
@@ -1288,6 +1360,7 @@
             <span>今日主线</span>
             <span>当前时间线</span>
             <span>快速记录</span>
+            <button id="btnOpenGlobalSearchHome" class="font-black"><i class="fa-solid fa-magnifying-glass mr-1"></i>搜索</button>
           </div>
         </div>
 
@@ -1322,6 +1395,34 @@
             <button id="btnHomeOpenExecution" class="hidden">新增日程</button>
             <div id="homeQuickActionStatus" class="text-xs text-calm-mute mt-3"></div>
           </section>
+
+          <section class="cockpit-panel">
+            <div class="cockpit-panel-head">
+              <h2><i class="fa-regular fa-bell"></i> 即将到期</h2>
+              <span id="homeReminderBadge" class="pill bg-slate-100 text-slate-700">0 条</span>
+            </div>
+            <div id="homeReminderList" class="cockpit-list text-sm"></div>
+          </section>
+
+        </div>
+      </section>
+
+      <section id="reminder-section" class="section-hidden space-y-6">
+        <div class="soft-card p-5 md:p-6">
+          <div class="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
+            <div>
+              <h1 class="text-2xl font-black flex items-center gap-2"><i class="fa-regular fa-bell text-dopamine-sky"></i> 提醒中心</h1>
+              <p class="text-calm-mute mt-2 text-sm">聚合任务、项目、论文、投稿和导师跟进的近期节点。</p>
+            </div>
+            <div class="inline-flex items-center rounded-full bg-white/80 border border-calm-line p-1">
+              <button class="reminder-range-btn px-3 py-2 rounded-full text-sm font-black" data-reminder-range="0">今日</button>
+              <button class="reminder-range-btn px-3 py-2 rounded-full text-sm font-black" data-reminder-range="7">7 天</button>
+              <button class="reminder-range-btn px-3 py-2 rounded-full text-sm font-black" data-reminder-range="30">30 天</button>
+            </div>
+          </div>
+        </div>
+        <div class="soft-card p-5 md:p-6">
+          <div id="reminderCenterList" class="space-y-2"></div>
         </div>
       </section>
 
@@ -1414,6 +1515,7 @@
                 <div class="flex items-center justify-between gap-3">
                   <div>
                     <div class="font-black">时间块规划：把任务放进日程</div>
+                    <div id="scheduleFormStatus" class="form-status mt-2" aria-live="polite"></div>
                   </div>
                   <span id="schedulePlanSummary" class="pill bg-dopamine-sky/10 text-dopamine-sky">0 个时间块</span>
                 </div>
@@ -1465,11 +1567,16 @@
           </div>
           <div class="space-y-5">
             <div class="small-stat p-4">
-              <div class="font-black mb-3">新建项目</div>
-              <div class="space-y-2">
-                <input id="workflowProjectTitle" class="w-full px-3 py-3 rounded-2xl border border-calm-line bg-white" placeholder="项目名，如：Chapter 3 图表整理">
-                <input id="workflowProjectOutcome" class="w-full px-3 py-3 rounded-2xl border border-calm-line bg-white" placeholder="完成结果，如：交出可发导师的版本">
-                <div class="grid grid-cols-1 md:grid-cols-3 gap-2">
+              <div class="flex flex-col md:flex-row md:items-center md:justify-between gap-2 mb-3">
+                <div>
+                  <div class="font-black">新建项目</div>
+                  <div class="text-xs text-calm-mute mt-1">保存后自动选中，下一条任务会默认归入这个项目。</div>
+                </div>
+                <div id="workflowProjectStatus" class="form-status" aria-live="polite"></div>
+              </div>
+              <div class="grid grid-cols-1 xl:grid-cols-[minmax(0,1.1fr)_minmax(0,1.4fr)_180px_150px_150px_120px] gap-2 items-stretch">
+                <input id="workflowProjectTitle" class="px-3 py-3 rounded-2xl border border-calm-line bg-white" placeholder="项目名，如：Chapter 3 图表整理">
+                <input id="workflowProjectOutcome" class="px-3 py-3 rounded-2xl border border-calm-line bg-white" placeholder="完成结果，如：交出可发导师的版本">
                   <select id="workflowProjectArea" class="px-3 py-3 rounded-2xl border border-calm-line bg-white">
                     <option value="research">科研 / 实验</option>
                     <option value="writing">写作 / 论文</option>
@@ -1480,8 +1587,7 @@
                   </select>
                   <input id="workflowProjectStartDate" type="date" class="px-3 py-3 rounded-2xl border border-calm-line bg-white" title="开始日期">
                   <input id="workflowProjectDeadline" type="date" class="px-3 py-3 rounded-2xl border border-calm-line bg-white">
-                </div>
-                <button id="btnAddWorkflowProject" class="w-full px-4 py-3 rounded-2xl bg-dopamine-purple text-white font-black">新增项目</button>
+                <button id="btnAddWorkflowProject" class="px-4 py-3 rounded-2xl bg-dopamine-purple text-white font-black">新增</button>
               </div>
             </div>
             <div class="min-w-0">
@@ -1512,7 +1618,13 @@
           </div>
 
           <div class="small-stat p-4 mb-5">
-            <div class="font-black mb-3">新建任务</div>
+            <div class="flex flex-col md:flex-row md:items-center md:justify-between gap-2 mb-3">
+              <div>
+                <div class="font-black">新建任务</div>
+                <div class="text-xs text-calm-mute mt-1">任务名输入后按 Enter 可直接新增。</div>
+              </div>
+              <div id="workflowTaskStatus" class="form-status" aria-live="polite"></div>
+            </div>
             <div class="grid grid-cols-1 xl:grid-cols-[minmax(0,1.3fr)_180px_170px_150px_150px_120px] gap-2">
               <input id="workflowCaptureText" class="px-3 py-3 rounded-2xl border border-calm-line bg-white" placeholder="任务名称，如：重画 Figure 2 的误差棒">
               <select id="workflowCaptureProject" class="px-3 py-3 rounded-2xl border border-calm-line bg-white">
@@ -1764,12 +1876,14 @@
               <input id="submissionLogMinutes" type="number" min="0" step="5" class="px-3 py-3 rounded-2xl border border-calm-line bg-white" placeholder="分钟">
             </div>
             <textarea id="submissionLogNote" rows="3" class="w-full px-3 py-3 rounded-2xl border border-calm-line bg-white" placeholder="今天推进了什么？遇到什么问题？下一步是什么？"></textarea>
-            <button id="btnAddSubmissionLog" class="mt-2 w-full px-4 py-3 rounded-2xl bg-dopamine-orange text-white font-black">添加推进日志</button>
+            <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2 mt-2">
+              <div id="submissionLogStatus" class="form-status" aria-live="polite"></div>
+              <button id="btnAddSubmissionLog" class="px-4 py-3 rounded-2xl bg-dopamine-orange text-white font-black">添加推进日志</button>
+            </div>
           </div>
           <div id="submissionLogList" class="space-y-3"></div>
         </div>
       </section>
-
 
       <section id="reimb-section" class="section-hidden space-y-6">
         <div class="soft-card p-5 md:p-6">
@@ -2259,7 +2373,10 @@
               <textarea id="mentorNextAction" rows="3" class="w-full px-3 py-3 rounded-2xl border border-calm-line bg-white" placeholder="例如：周四前发 1 页摘要；若周五无反馈则主动预约 15 分钟沟通"></textarea>
               <button id="btnMentorNextActionTask" type="button" class="mt-2 px-3 py-2 rounded-xl bg-sky-50 text-dopamine-sky font-bold text-sm">手动加入任务总表</button>
             </label>
-            <button id="btnSaveMentor" class="mt-4 w-full px-4 py-3 rounded-2xl bg-dopamine-purple text-white font-black">保存记录</button>
+            <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2 mt-4">
+              <div id="mentorFormStatus" class="form-status" aria-live="polite"></div>
+              <button id="btnSaveMentor" class="px-4 py-3 rounded-2xl bg-dopamine-purple text-white font-black">保存记录</button>
+            </div>
           </div>
 
           <div class="space-y-6">
@@ -2306,7 +2423,8 @@
                 <div>
                   <h2 class="text-xl font-black">复盘模板</h2>
                 </div>
-                <div class="flex gap-2">
+                <div class="flex flex-wrap gap-2 items-center">
+                  <div id="reviewFormStatus" class="form-status" aria-live="polite"></div>
                   <button id="btnDeleteDailyReview" class="px-3 py-2 rounded-2xl bg-rose-100 text-rose-600 font-bold">清空当天</button>
                   <button id="btnSaveDailyReview" class="px-4 py-2 rounded-2xl bg-dopamine-pink text-white font-black">保存复盘</button>
                 </div>
@@ -2584,8 +2702,8 @@
     <i class="fa-solid fa-angles-left"></i>
   </button>
 
-  <dialog id="editDialog" class="rounded-[1.25rem] p-0 w-[min(92vw,560px)]">
-    <div class="p-5 bg-white">
+  <dialog id="editDialog" class="rounded-[1.25rem] p-0 w-[min(92vw,620px)]">
+    <div class="edit-dialog-shell p-5 bg-white">
       <div class="flex items-center justify-between mb-4">
         <div>
           <div id="editDialogTitle" class="text-xl font-black">编辑记录</div>
@@ -2593,17 +2711,29 @@
         </div>
         <button id="btnCloseEditDialog" class="text-calm-mute text-xl"><i class="fa-solid fa-xmark"></i></button>
       </div>
-      <div id="editDialogBody" class="space-y-3"></div>
-      <div class="flex flex-wrap gap-2 justify-end mt-4">
+      <div id="editDialogBody" class="edit-dialog-body space-y-3"></div>
+      <div class="edit-dialog-actions flex flex-wrap gap-2 justify-end mt-4">
         <button id="btnDeleteRecord" class="px-4 py-3 rounded-2xl bg-rose-100 text-rose-600 font-black">删除</button>
         <button id="btnSaveRecord" class="px-4 py-3 rounded-2xl bg-dopamine-orange text-white font-black">保存修改</button>
       </div>
     </div>
   </dialog>
 
+  <dialog id="globalSearchDialog" class="rounded-[1.25rem] p-0 w-[min(94vw,760px)]">
+    <div class="p-4 bg-white">
+      <div class="flex items-center gap-3 border-b border-calm-line pb-3">
+        <i class="fa-solid fa-magnifying-glass text-calm-mute"></i>
+        <input id="globalSearchInput" class="flex-1 bg-transparent outline-none font-bold" placeholder="搜索任务、项目、投稿、导师记录和提醒">
+        <button id="btnCloseGlobalSearch" class="text-calm-mute text-xl"><i class="fa-solid fa-xmark"></i></button>
+      </div>
+      <div id="globalSearchResults" class="max-h-[62vh] overflow-auto scroll-thin pt-3 space-y-4"></div>
+    </div>
+  </dialog>
+
   <script src="./scripts/state-migration.js"></script>
   <script src="./scripts/navigation.js"></script>
   <script src="./scripts/domain-renderers.js"></script>
+  <script src="./scripts/reminders-search.js"></script>
   <script src="./scripts/bindings.js"></script>
   <script type="module" src="./sync/ui.js"></script>
 </body>

@@ -19,6 +19,7 @@ export function splitState(state) {
       timeBlocks: state?.timeBlocks || {},
       focus: state?.focus || { active: null, sessions: [] },
       reimb: state?.reimb || { pending: [], done: [] },
+      reminders: state?.reminders || { dismissedBySourceId: {}, snoozedBySourceId: {}, manual: [] },
     },
     "tasks.json": { tasks: state?.tasks || [] },
     "projects.json": { projects: state?.projects || [] },
@@ -252,6 +253,7 @@ function mergeProfile(next, value, ctx) {
   if ("timeBlocks" in value) next.timeBlocks = mergeDatedArrays(next.timeBlocks || {}, value.timeBlocks || {}, ctx, "timeBlocks");
   if ("focus" in value) next.focus = mergeFocus(next.focus || { active: null, sessions: [] }, value.focus || {}, ctx);
   if ("reimb" in value) next.reimb = mergeReimb(next.reimb || { pending: [], done: [] }, value.reimb || {}, ctx);
+  if ("reminders" in value) next.reminders = mergeRecord(next.reminders || {}, value.reminders || {}, ctx, "reminders");
 }
 
 function mergeGenericArrayState(next, key, value, ctx) {
@@ -267,6 +269,7 @@ export function mergeSyncFilesToState(currentState, changedFiles, { smartMergeFi
       if ("timeBlocks" in value) next.timeBlocks = value.timeBlocks || {};
       if ("focus" in value) next.focus = value.focus || { active: null, sessions: [] };
       if ("reimb" in value) next.reimb = value.reimb || { pending: [], done: [] };
+      if ("reminders" in value) next.reminders = value.reminders || { dismissedBySourceId: {}, snoozedBySourceId: {}, manual: [] };
     },
     "tasks.json": (value) => {
       if ("tasks" in value) next.tasks = value.tasks || [];

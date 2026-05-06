@@ -41,6 +41,8 @@
       $('btnWorkflowToday').onclick = () => { $('workflowDate').value = todayStr(); renderAll(); };
       $('btnWorkflowCapture').onclick = addWorkflowCaptureTask;
       $('btnAddWorkflowProject').onclick = addWorkflowProject;
+      $('workflowCaptureText')?.addEventListener('keydown', e => { if (e.key === 'Enter') { e.preventDefault(); addWorkflowCaptureTask(); } });
+      ['workflowProjectTitle','workflowProjectOutcome'].forEach(id => $(id)?.addEventListener('keydown', e => { if (e.key === 'Enter') { e.preventDefault(); addWorkflowProject(); } }));
       $('workflowTaskFilter').onchange = renderWorkflow;
       if ($('workflowProjectFilterSelect')) $('workflowProjectFilterSelect').onchange = () => { workflowSelectedProjectId = $('workflowProjectFilterSelect').value || ''; renderWorkflow(); };
       const jumpWorkflowToSchedule = () => {
@@ -75,6 +77,7 @@
         if (task?.estimate && parseHM($('scheduleTaskStart').value)) $('scheduleTaskEnd').value = addMinutesToHM($('scheduleTaskStart').value, task.estimate);
       };
       $('btnAddTaskBlock').onclick = addScheduledTaskBlock;
+      $('scheduleTaskTitle')?.addEventListener('keydown', e => { if (e.key === 'Enter') { e.preventDefault(); addScheduledTaskBlock(); } });
 
       $('habitDate').value = todayStr();
       $('habitDate').onchange = renderAll;
@@ -97,12 +100,18 @@
       $('mentorDate').onchange = renderAll;
       $('btnMentorToday').onclick = () => { $('mentorDate').value = todayStr(); renderAll(); };
       $('btnSaveMentor').onclick = saveMentorEntry;
+      ['mentorTopic','mentorEvidence','mentorAsk','mentorRisk','mentorFeedback','mentorCommitment','mentorConfirmation','mentorBoundary','mentorNextAction'].forEach(id => {
+        $(id)?.addEventListener('keydown', e => { if ((e.ctrlKey || e.metaKey) && e.key === 'Enter') { e.preventDefault(); saveMentorEntry(); } });
+      });
       if ($('btnMentorNextActionTask')) $('btnMentorNextActionTask').onclick = () => ensureMentorNextActionTaskForDate($('mentorDate').value || todayStr());
       $('btnDeleteMentor').onclick = () => { if (confirm('确定清空这天的导师沟通记录吗？')) deleteMentorEntry(); };
 
       $('reviewDate').value = todayStr();
       $('reviewDate').onchange = renderAll;
       $('btnSaveDailyReview').onclick = saveDailyReview;
+      ['reviewEnergyNote','reviewAccomplishments','reviewUnfinished','reviewInsights','reviewObstacles','reviewTomorrow1','reviewTomorrow2','reviewTomorrow3'].forEach(id => {
+        $(id)?.addEventListener('keydown', e => { if ((e.ctrlKey || e.metaKey) && e.key === 'Enter') { e.preventDefault(); saveDailyReview(); } });
+      });
       if ($('btnReviewTomorrowTasks')) $('btnReviewTomorrowTasks').onclick = createTomorrowTasksFromReview;
       $('btnDeleteDailyReview').onclick = () => { if (confirm('确定清空这天的学术复盘吗？')) deleteDailyReview(); };
       $('btnDownloadReviewMd').onclick = downloadReviewMarkdown;
@@ -117,6 +126,7 @@
       $('submissionLogDate').value = todayStr();
       $('submissionLogProject').onchange = renderSubmissionLogs;
       $('btnAddSubmissionLog').onclick = addSubmissionLog;
+      $('submissionLogNote')?.addEventListener('keydown', e => { if ((e.ctrlKey || e.metaKey) && e.key === 'Enter') { e.preventDefault(); addSubmissionLog(); } });
       $('btnDownloadSubmissionMd').onclick = downloadSubmissionMarkdown;
 
       $('dashboardRange').onchange = () => {
