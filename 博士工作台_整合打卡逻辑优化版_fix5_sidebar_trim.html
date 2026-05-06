@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>PhD Master Workspace · v9</title>
+  <title>学术工作台</title>
   <script src="https://cdn.tailwindcss.com"></script>
   <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.8/dist/chart.umd.min.js"></script>
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.2/css/all.min.css">
@@ -32,71 +32,270 @@
     };
   </script>
   <style>
+    @font-face {
+      font-family: 'LXGW-WenKai-Mono-GB';
+      src:
+        local('LXGW WenKai Mono GB Screen'),
+        local('LXGW WenKai Mono GB'),
+        url('file:///D:/font/LXGWWenKaiMonoGBScreen.ttf') format('truetype');
+      font-weight: normal;
+      font-style: normal;
+      font-display: swap;
+      unicode-range: U+4E00-9FFF;
+    }
     html { font-size: clamp(14px, 0.35vw + 13px, 16px); }
+    :root {
+      --color-black-soft: #2A2B2A;
+      --color-white-soft: #F8F7F2;
+      --font-ui: Consolas, '宋体', 'SimSun', 'LXGW-WenKai-Mono-GB', sans-serif;
+      --font-code: Consolas, Monaco, 'Andale Mono', 'Ubuntu Mono', monospace;
+      --workspace-bg: hsl(55, 19%, 89%);
+      --workspace-bg-strong: hsl(51, 16%, 85%);
+      --workspace-panel: hsl(40, 23%, 98%);
+      --workspace-panel-strong: #FFFFFF;
+      --workspace-border: #87867F40;
+      --workspace-text: hsl(49 19.6% 13.3%);
+      --workspace-muted: hsl(47, 10%, 41%);
+      --workspace-accent: hsl(47, 15%, 25%);
+      --workspace-accent-soft: hsl(47, 12%, 35%);
+      --workspace-accent-faint: rgba(61, 57, 41, .05);
+      --workspace-danger: #7C1B13;
+      --workspace-success: #21624f;
+      --workspace-glow: rgba(135, 134, 127, .12);
+      --workspace-shadow: 0 24px 60px -42px rgba(42, 43, 42, .16);
+      --workspace-shadow-soft: 0 16px 36px -28px rgba(42, 43, 42, .12);
+      --workspace-radius: 1.45rem;
+      --workspace-radius-sm: 1rem;
+      --workspace-grid: rgba(61, 57, 41, .05);
+      --workspace-highlight: #7C1B13;
+      --color-background: hsl(55, 19%, 89%);
+      --color-background-soft: hsl(51, 16%, 85%);
+      --color-background-mute: #E4E1D7;
+      --navbar-background: var(--color-white-soft);
+      --chat-background: var(--color-white-soft);
+      --chat-background-user: #F8F7F2;
+      --chat-background-assistant: hsl(51, 24%, 95%);
+      --color-text: hsl(49 19.6% 13.3%);
+      --color-border: #87867F40;
+      --color-code-bg: #3D39290D;
+      --color-code: #7C1B13;
+      --color-code-block: #FFFFFF;
+    }
+    *,
+    *::before,
+    *::after {
+      font-family: var(--font-ui) !important;
+    }
+    /* 强化 Font Awesome 恢复规则，避免全局 font-family 覆盖导致图标丢失 */
+    [class^="fa-"], [class*=" fa-"], i[class*="fa-"], .fa, .fa::before, .fa::after,
+    .fa-solid::before, .fa-regular::before, .fa-brands::before,
+    .fas::before, .far::before, .fab::before {
+      font-family: "Font Awesome 6 Free" !important;
+      font-style: normal !important;
+      speak: none !important;
+    }
+    .fab, .fab::before, [class*="fa-brands"], .fa-brands::before {
+      font-family: "Font Awesome 6 Brands" !important;
+    }
+    .fas, .fa-solid { font-weight: 900 !important; }
+    .far, .fa-regular { font-weight: 400 !important; }
+    /* 美化：稍宽侧边栏、柔和阴影与按钮间距 */
+    :root { --desktop-sidebar-width: 300px; }
+    .soft-card { box-shadow: 0 30px 70px -36px rgba(0,0,0,.14); }
+    .nav-btn span { font-size: 1rem; }
+    #sidebar { padding: 1rem; }
+    body[theme-mode="dark"] {
+      --color-background: #2B2B2B;
+      --color-background-soft: #303030;
+      --color-background-mute: #282C34;
+      --navbar-background: var(--color-black-soft);
+      --chat-background: var(--color-black-soft);
+      --chat-background-user: #323332;
+      --chat-background-assistant: #2D2E2D;
+      --color-text: hsl(50, 14%, 91%);
+      --color-border: #5E5D5940;
+      --color-code-bg: #E5E5E20D;
+      --color-code: #EA928A;
+      --color-code-block: #ABB2BF;
+      --workspace-bg: #2B2B2B;
+      --workspace-bg-strong: #303030;
+      --workspace-panel: hsl(60, 2%, 21%);
+      --workspace-panel-strong: #323332;
+      --workspace-border: #5E5D5940;
+      --workspace-text: hsl(50, 14%, 91%);
+      --workspace-muted: rgba(234, 229, 214, .66);
+      --workspace-accent: hsl(50, 14%, 91%);
+      --workspace-accent-soft: rgba(234, 229, 214, .78);
+      --workspace-accent-faint: rgba(229, 229, 226, .05);
+      --workspace-danger: #EA928A;
+      --workspace-success: #A3C9A8;
+      --workspace-glow: rgba(94, 93, 89, .18);
+      --workspace-shadow: 0 24px 60px -42px rgba(0, 0, 0, .34);
+      --workspace-shadow-soft: 0 16px 36px -28px rgba(0, 0, 0, .22);
+      --workspace-grid: rgba(255,255,255,.03);
+      --workspace-highlight: #EA928A;
+    }
+    body[theme-mode="light"] {
+      --color-background: hsl(55, 19%, 89%);
+      --color-background-soft: hsl(51, 16%, 85%);
+      --color-background-mute: #E4E1D7;
+      --navbar-background: var(--color-white-soft);
+      --chat-background: var(--color-white-soft);
+      --chat-background-user: #F8F7F2;
+      --chat-background-assistant: hsl(51, 24%, 95%);
+      --color-text: hsl(49 19.6% 13.3%);
+      --color-border: #87867F40;
+      --color-code-bg: #3D39290D;
+      --color-code: #7C1B13;
+      --color-code-block: #FFFFFF;
+    }
     body {
       background:
-        radial-gradient(circle at top left, rgba(255,140,66,.18), transparent 28%),
-        radial-gradient(circle at top right, rgba(77,157,224,.14), transparent 24%),
-        linear-gradient(145deg, #fff8ef 0%, #f8fbff 55%, #fff6fb 100%);
+        radial-gradient(circle at 12% 8%, var(--workspace-glow), transparent 22%),
+        radial-gradient(circle at 86% 14%, rgba(94, 93, 89, .08), transparent 24%),
+        radial-gradient(circle at 50% 100%, rgba(135, 134, 127, .12), transparent 26%),
+        linear-gradient(180deg, var(--color-background) 0%, var(--color-background-soft) 42%, var(--color-background-mute) 100%);
       min-height: 100vh;
-      color: #45495F;
+      color: var(--color-text);
       position: relative;
       overflow-x: hidden;
+      letter-spacing: .01em;
     }
     body::before,
     body::after {
       content: '';
       position: fixed;
-      width: 24rem;
-      height: 24rem;
-      border-radius: 999px;
-      filter: blur(70px);
-      opacity: .38;
+      inset: 0;
       pointer-events: none;
       z-index: -1;
     }
     body::before {
-      top: -8rem;
-      right: -7rem;
-      background: rgba(255,107,139,.22);
+      background-image:
+        linear-gradient(var(--workspace-grid) 1px, transparent 1px),
+        linear-gradient(90deg, var(--workspace-grid) 1px, transparent 1px);
+      background-size: 34px 34px;
+      mask-image: linear-gradient(180deg, rgba(255,255,255,.55), transparent 82%);
     }
     body::after {
-      left: -8rem;
-      bottom: -10rem;
-      background: rgba(77,157,224,.18);
+      background:
+        radial-gradient(circle at 18% 20%, rgba(255,255,255,.48), transparent 17%),
+        radial-gradient(circle at 83% 76%, rgba(255,255,255,.42), transparent 18%);
+      opacity: .72;
     }
     .soft-card {
-      background: rgba(255,255,255,.9);
-      backdrop-filter: blur(18px);
-      border: 1px solid rgba(236,238,245,.92);
-      border-radius: 1.4rem;
-      box-shadow: 0 26px 70px -36px rgba(76, 90, 135, .22);
-      transition: transform .18s ease, box-shadow .18s ease, border-color .18s ease;
+      background: var(--workspace-panel);
+      backdrop-filter: blur(22px);
+      border: 1px solid var(--color-border);
+      border-radius: var(--workspace-radius);
+      box-shadow: var(--workspace-shadow);
+      transition: transform .22s ease, box-shadow .22s ease, border-color .22s ease, background-color .22s ease;
+      position: relative;
+      overflow: hidden;
+    }
+    .soft-card::before {
+      content: '';
+      position: absolute;
+      inset: 0 0 auto 0;
+      height: 1px;
+      background: linear-gradient(90deg, transparent, rgba(255,255,255,.5), transparent);
+      pointer-events: none;
     }
     .soft-card:hover {
-      box-shadow: 0 28px 78px -38px rgba(76, 90, 135, .28);
-      border-color: rgba(222,226,238,.95);
+      box-shadow: 0 28px 62px -42px rgba(0, 0, 0, .14);
+      border-color: color-mix(in srgb, var(--workspace-accent) 18%, var(--color-border));
+      transform: translateY(-2px);
     }
-    .nav-btn { transition: all .18s ease; }
+    .nav-btn {
+      transition: all .2s ease;
+      border: 1px solid transparent;
+      background: transparent;
+      color: var(--workspace-accent-soft);
+      position: relative;
+      overflow: hidden;
+    }
+    .nav-btn span {
+      font-size: .95rem;
+      letter-spacing: .01em;
+    }
     .nav-btn.active {
-      background: linear-gradient(90deg, #FF8C42, #FF6B8B);
-      color: white;
-      box-shadow: 0 10px 25px -12px rgba(255,107,139,.6);
+      background: var(--chat-background-user);
+      color: var(--workspace-accent);
+      border-color: var(--color-border);
+      box-shadow: inset 0 1px 0 rgba(255,255,255,.52), 0 10px 24px -18px rgba(0,0,0,.12);
     }
-    .nav-btn:hover:not(.active) { background: rgba(255,255,255,.88); transform: translateY(-1px); }
+    .nav-btn.active i { color: var(--workspace-highlight); }
+    .nav-btn:hover:not(.active) {
+      background: color-mix(in srgb, var(--chat-background-user) 72%, transparent);
+      border-color: var(--color-border);
+      transform: translateY(-1px);
+    }
     .section-hidden { display: none; }
     .small-stat {
-      border-radius: 1rem;
-      background: linear-gradient(180deg, rgba(255,255,255,.92), rgba(249,250,255,.84));
-      border: 1px solid rgba(236,238,245,.95);
-      box-shadow: inset 0 1px 0 rgba(255,255,255,.72);
+      border-radius: 1.15rem;
+      background: var(--chat-background-user);
+      border: 1px solid var(--color-border);
+      box-shadow: inset 0 1px 0 rgba(255,255,255,.42), var(--workspace-shadow-soft);
+    }
+    .subtle-panel {
+      border-radius: 1.15rem;
+      border: 1px solid var(--color-border);
+      background: linear-gradient(180deg, color-mix(in srgb, var(--chat-background-assistant) 92%, white 8%), color-mix(in srgb, var(--color-background-soft) 88%, white 12%));
+      box-shadow: inset 0 1px 0 rgba(255,255,255,.38);
+    }
+    h1, h2, h3, .font-black {
+      font-family: var(--font-ui) !important;
+      letter-spacing: -.02em;
+    }
+    .workspace-kicker {
+      display: inline-flex;
+      align-items: center;
+      gap: .55rem;
+      padding: .38rem .78rem;
+      border-radius: 999px;
+      background: var(--workspace-accent-faint);
+      color: var(--workspace-accent);
+      font-size: .75rem;
+      font-weight: 800;
+      letter-spacing: .16em;
+      text-transform: uppercase;
+    }
+    .workspace-kicker::before {
+      content: '';
+      width: .48rem;
+      height: .48rem;
+      border-radius: 999px;
+      background: linear-gradient(135deg, var(--workspace-highlight), color-mix(in srgb, var(--workspace-highlight) 42%, white 58%));
+      box-shadow: 0 0 0 .24rem color-mix(in srgb, var(--workspace-highlight) 12%, transparent 88%);
+    }
+    .workspace-modal-open {
+      overflow: hidden;
+    }
+    .workspace-onboarding {
+      position: fixed;
+      inset: 0;
+      background: rgba(15, 23, 42, .56);
+      backdrop-filter: blur(14px);
+      z-index: 1700;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding: 1rem;
+    }
+    .workspace-onboarding.hidden { display: none; }
+    .workspace-onboarding-card {
+      width: min(860px, 96vw);
+      border-radius: 1.8rem;
+      background: rgba(255,255,255,.96);
+      border: 1px solid rgba(226, 232, 240, .98);
+      box-shadow: 0 36px 100px -50px rgba(15, 23, 42, .45);
+      overflow: hidden;
     }
     .checkin-btn { border-radius: 999px; padding: .75rem 1rem; font-weight: 800; color: white; }
     .checkin-btn:active { transform: scale(.98); }
     .timeline-grid { position: relative; }
     .timeline-body {
       position: relative;
-      min-height: 1296px;
+      min-height: 0;
       --timeline-axis-left: 3.75rem;
       --timeline-lane-gap: .75rem;
       --timeline-right-pad: .75rem;
@@ -231,6 +430,170 @@
     .workflow-tag { display:inline-flex; align-items:center; gap:.35rem; padding:.28rem .62rem; border-radius:999px; font-size:.72rem; font-weight:800; }
     .workflow-metric-card { border-radius: 1.2rem; border: 1px solid #ECEEF5; background: linear-gradient(180deg, rgba(255,255,255,.96), rgba(250,251,255,.9)); }
     .workflow-kpi-strip { border-radius: 1rem; border: 1px dashed #E3E7F1; background: rgba(247,248,252,.78); }
+    .hero-slab {
+      background:
+        radial-gradient(circle at top right, color-mix(in srgb, var(--workspace-highlight) 10%, transparent), transparent 26%),
+        linear-gradient(135deg, color-mix(in srgb, var(--chat-background-assistant) 92%, white 8%), color-mix(in srgb, var(--chat-background-user) 88%, var(--color-background-soft) 12%));
+    }
+    .hero-side-panel {
+      background:
+        linear-gradient(180deg, color-mix(in srgb, var(--navbar-background) 94%, black 6%), color-mix(in srgb, var(--chat-background) 90%, black 10%)),
+        radial-gradient(circle at top right, color-mix(in srgb, var(--workspace-highlight) 16%, transparent), transparent 32%);
+      color: var(--color-text);
+      border-color: var(--color-border);
+      box-shadow: inset 0 1px 0 rgba(255,255,255,.04);
+    }
+    body[theme-mode="light"] .hero-side-panel { color: var(--workspace-accent); }
+    body[theme-mode="dark"] .hero-side-panel { color: hsl(50, 14%, 91%); }
+    .hero-side-panel .text-calm-mute { color: var(--workspace-muted) !important; }
+    .hero-side-panel .pill {
+      background: color-mix(in srgb, var(--chat-background-user) 75%, transparent);
+      color: inherit;
+    }
+    .hero-side-panel button {
+      background: var(--chat-background-user);
+      color: var(--workspace-accent);
+      border: 1px solid var(--color-border);
+    }
+    .launcher-board {
+      position: relative;
+      overflow: hidden;
+      background:
+        radial-gradient(circle at top left, color-mix(in srgb, var(--workspace-highlight) 8%, transparent), transparent 16%),
+        linear-gradient(180deg, color-mix(in srgb, var(--chat-background-assistant) 96%, white 4%), color-mix(in srgb, var(--chat-background-user) 90%, var(--color-background-soft) 10%));
+    }
+    .launcher-board::after,
+    .today-shell::after {
+      content: '';
+      position: absolute;
+      inset: 0;
+      background: linear-gradient(135deg, transparent 0%, rgba(255,255,255,.18) 48%, transparent 100%);
+      pointer-events: none;
+    }
+    .today-shell {
+      position: relative;
+      overflow: hidden;
+      background:
+        radial-gradient(circle at top left, color-mix(in srgb, var(--workspace-highlight) 6%, transparent), transparent 18%),
+        linear-gradient(180deg, color-mix(in srgb, var(--chat-background-assistant) 96%, white 4%), color-mix(in srgb, var(--chat-background-user) 90%, var(--color-background-soft) 10%));
+    }
+    .metric-tile {
+      border-radius: 1.2rem;
+      background: var(--chat-background-user);
+      border: 1px solid var(--color-border);
+      box-shadow: 0 18px 34px -28px rgba(0, 0, 0, .10);
+    }
+    .metric-tile .metric-value {
+      font-size: clamp(1.35rem, 1vw + 1rem, 2rem);
+      line-height: 1;
+    }
+    .launcher-entry-card {
+      position: relative;
+      overflow: hidden;
+      border-radius: 1.35rem;
+      border: 1px solid var(--color-border);
+      background:
+        radial-gradient(circle at top right, color-mix(in srgb, var(--workspace-highlight) 8%, transparent), transparent 22%),
+        linear-gradient(180deg, color-mix(in srgb, var(--chat-background-user) 98%, white 2%), color-mix(in srgb, var(--chat-background-assistant) 94%, var(--color-background-soft) 6%));
+      box-shadow: 0 20px 40px -34px rgba(0, 0, 0, .10);
+    }
+    .launcher-entry-card.is-compact {
+      border-radius: 1.15rem;
+      box-shadow: 0 18px 42px -36px rgba(18, 32, 48, .22);
+    }
+    .launcher-entry-card.is-disabled {
+      background: color-mix(in srgb, var(--chat-background-assistant) 92%, var(--color-background-mute) 8%);
+      border-color: var(--color-border);
+    }
+    .launcher-entry-card::before {
+      content: '';
+      position: absolute;
+      inset: 0 auto 0 0;
+      width: 3px;
+      background: linear-gradient(180deg, var(--workspace-highlight), color-mix(in srgb, var(--workspace-highlight) 30%, var(--workspace-accent-soft) 70%));
+      opacity: .86;
+    }
+    .launcher-entry-icon {
+      width: 2.9rem;
+      height: 2.9rem;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      border-radius: 1rem;
+      background: linear-gradient(135deg, color-mix(in srgb, var(--workspace-highlight) 8%, transparent), color-mix(in srgb, var(--workspace-accent) 10%, transparent));
+      color: var(--workspace-accent);
+      box-shadow: inset 0 1px 0 rgba(255,255,255,.7);
+      flex-shrink: 0;
+    }
+    .launcher-entry-pin {
+      border-radius: 1rem;
+      border: 1px solid var(--color-border);
+      background: var(--chat-background-user);
+      color: var(--workspace-accent-soft);
+      backdrop-filter: blur(10px);
+    }
+    .launcher-entry-action {
+      border-radius: 999px;
+      padding: .72rem 1rem;
+      font-weight: 800;
+      letter-spacing: .01em;
+      border: 1px solid transparent;
+    }
+    .launcher-entry-action.primary {
+      background: var(--workspace-highlight);
+      color: white;
+      box-shadow: 0 12px 24px -18px rgba(0, 0, 0, .16);
+    }
+    .launcher-entry-action.secondary {
+      background: var(--chat-background-user);
+      border-color: var(--color-border);
+      color: var(--workspace-accent-soft);
+    }
+    .launcher-chip {
+      border-radius: 999px;
+      padding: .28rem .7rem;
+      font-size: .72rem;
+      font-weight: 700;
+      line-height: 1;
+    }
+    .sidebar-rail-entry {
+      border-radius: 1.05rem;
+      border: 1px solid var(--color-border);
+      background: color-mix(in srgb, var(--chat-background-user) 78%, transparent);
+      color: inherit;
+      transition: transform .18s ease, border-color .18s ease, background-color .18s ease;
+    }
+    .sidebar-rail-entry:hover {
+      transform: translateY(-1px);
+      border-color: color-mix(in srgb, var(--workspace-accent) 18%, var(--color-border));
+      background: var(--chat-background-user);
+    }
+    .home-signal-card,
+    .home-quick-link-card {
+      position: relative;
+      overflow: hidden;
+      border-radius: 1.15rem;
+      border: 1px solid var(--color-border);
+      background: var(--chat-background-user);
+      transition: transform .2s ease, border-color .2s ease, box-shadow .2s ease;
+    }
+    .home-signal-card:hover,
+    .home-quick-link-card:hover {
+      transform: translateY(-2px);
+      border-color: color-mix(in srgb, var(--workspace-accent) 18%, var(--color-border));
+      box-shadow: 0 18px 34px -28px rgba(0, 0, 0, .10);
+    }
+    .home-quick-link-card {
+      padding: .95rem 1rem;
+    }
+    .list-empty-state {
+      border-radius: 1rem;
+      padding: 1rem 1.05rem;
+      background: color-mix(in srgb, var(--chat-background-assistant) 84%, transparent);
+      border: 1px dashed var(--color-border);
+      color: var(--workspace-muted);
+      font-size: .9rem;
+    }
 
     dialog::backdrop { background: rgba(15,23,42,.45); }
     .mono { font-variant-numeric: tabular-nums; }
@@ -252,14 +615,28 @@
     select:focus,
     textarea:focus {
       outline: none;
-      border-color: rgba(77,157,224,.55);
-      box-shadow: 0 0 0 4px rgba(77,157,224,.13);
+      border-color: color-mix(in srgb, var(--workspace-highlight) 38%, var(--workspace-accent-soft));
+      box-shadow: 0 0 0 4px color-mix(in srgb, var(--workspace-highlight) 12%, transparent);
       background: rgba(255,255,255,.98);
     }
     #sidebar {
       background:
-        linear-gradient(180deg, rgba(255,255,255,.96), rgba(250,250,255,.92)),
-        radial-gradient(circle at top, rgba(255,140,66,.1), transparent 45%);
+        radial-gradient(circle at top right, color-mix(in srgb, var(--workspace-highlight) 10%, transparent), transparent 26%),
+        linear-gradient(180deg, var(--navbar-background), color-mix(in srgb, var(--chat-background) 92%, var(--color-background-mute) 8%));
+      color: var(--color-text);
+      border-color: var(--color-border);
+      box-shadow: 0 24px 54px -40px rgba(0,0,0,.12);
+    }
+    #sidebar .text-calm-mute { color: var(--workspace-muted) !important; }
+    #sidebar .small-stat,
+    #sidebar .subtle-panel {
+      background: color-mix(in srgb, var(--chat-background-user) 92%, transparent);
+      border-color: var(--color-border);
+      box-shadow: inset 0 1px 0 rgba(255,255,255,.14);
+    }
+    #sidebar .font-black,
+    #sidebar .font-bold {
+      color: var(--workspace-accent);
     }
     .storage-status-card {
       border-radius: 1.15rem;
@@ -305,6 +682,30 @@
       border-radius: 1.2rem;
       border: 1px solid rgba(236,238,245,.95);
       background: linear-gradient(180deg, rgba(255,255,255,.98), rgba(248,250,255,.94));
+    }
+    .deerflow-badge {
+      position: fixed;
+      right: 1rem;
+      bottom: 1rem;
+      z-index: 1600;
+      display: inline-flex;
+      align-items: center;
+      gap: .5rem;
+      padding: .48rem .78rem;
+      border-radius: 999px;
+      background: color-mix(in srgb, var(--chat-background-user) 90%, transparent);
+      border: 1px solid var(--color-border);
+      color: var(--workspace-muted);
+      font-size: .76rem;
+      text-decoration: none;
+      backdrop-filter: blur(16px);
+      box-shadow: 0 18px 42px -28px rgba(9, 18, 30, .48);
+      transition: transform .18s ease, background-color .18s ease, color .18s ease;
+    }
+    .deerflow-badge:hover {
+      transform: translateY(-1px);
+      background: var(--chat-background-user);
+      color: var(--workspace-accent);
     }
 
     .checkin-toolbar {
@@ -353,11 +754,16 @@
       .timeline-event { min-height: 50px; padding: .5rem .62rem; }
       .timeline-mobile-panel .timeline-event[data-lane="attendance"],
       .timeline-mobile-panel .timeline-event[data-lane="schedule"] { left: var(--timeline-axis-left); transform:none; }
+      .deerflow-badge {
+        right: .75rem;
+        bottom: .75rem;
+        padding: .42rem .72rem;
+      }
     }
   
 
     :root {
-      --desktop-sidebar-width: 260px;
+      --desktop-sidebar-width: 278px;
       --desktop-shell-gap: 1.5rem;
       --mobile-topbar-height: 4rem;
     }
@@ -372,10 +778,11 @@
       right: 0;
       height: var(--mobile-topbar-height);
       padding: .75rem 1rem;
-      background: rgba(255,255,255,.9);
-      backdrop-filter: blur(14px);
-      border-bottom: 1px solid rgba(236,238,245,.9);
+      background: color-mix(in srgb, var(--navbar-background) 92%, transparent);
+      backdrop-filter: blur(18px);
+      border-bottom: 1px solid var(--color-border);
       z-index: 1300;
+      color: var(--color-text);
     }
     .mobile-topbar-btn {
       width: 2.8rem;
@@ -383,13 +790,30 @@
       display: inline-flex;
       align-items: center;
       justify-content: center;
-      border: 1px solid #ECEEF5;
+      border: 1px solid var(--color-border);
       border-radius: 1rem;
-      background: #fff;
-      color: #FF8C42;
-      box-shadow: 0 18px 45px -22px rgba(0,0,0,.16);
+      background: var(--chat-background-user);
+      color: var(--workspace-accent);
+      box-shadow: 0 18px 45px -22px rgba(0,0,0,.08);
       cursor: pointer;
       flex-shrink: 0;
+    }
+    .mobile-topbar .text-calm-mute { color: var(--workspace-muted) !important; }
+    .mobile-topbar .font-black { color: var(--workspace-accent); }
+    code {
+      background-color: var(--color-code-bg);
+      color: var(--color-code);
+      border-radius: .5rem;
+      padding: .08rem .35rem;
+      font-family: var(--font-code) !important;
+    }
+    pre code {
+      color: var(--color-code-block);
+      background: transparent;
+      padding: 0;
+    }
+    code, pre, kbd, samp, tt {
+      font-family: var(--font-code) !important;
     }
     #mobileNavBackdrop {
       display: none;
@@ -437,6 +861,305 @@
         display: none !important;
       }
     }
+    /* Cold research cockpit override */
+    :root {
+      --cockpit-bg: #e8ece8;
+      --cockpit-panel: #f7f8f5;
+      --cockpit-line: rgba(43, 51, 45, .16);
+      --cockpit-ink: #202722;
+      --cockpit-muted: #687168;
+      --cockpit-accent: #225c4d;
+    }
+    body {
+      background:
+        linear-gradient(90deg, rgba(32, 39, 34, .035) 1px, transparent 1px),
+        linear-gradient(180deg, rgba(32, 39, 34, .035) 1px, transparent 1px),
+        linear-gradient(180deg, #eef1ed 0%, #e3e8e3 100%);
+      background-size: 28px 28px, 28px 28px, auto;
+      color: var(--cockpit-ink);
+    }
+    body::before,
+    body::after { display: none; }
+    .soft-card,
+    .small-stat,
+    .subtle-panel,
+    .action-tile,
+    .storage-status-card {
+      background: var(--cockpit-panel);
+      border: 1px solid var(--cockpit-line);
+      border-radius: 12px;
+      box-shadow: none;
+      backdrop-filter: none;
+    }
+    .soft-card::before { display: none; }
+    .soft-card:hover {
+      transform: none;
+      box-shadow: none;
+      border-color: rgba(34, 92, 77, .28);
+    }
+    #appLayout {
+      max-width: 1440px;
+      gap: 16px;
+    }
+    @media (min-width: 1024px) {
+      #appLayout {
+        grid-template-columns: 244px minmax(0,1fr);
+      }
+    }
+    .cockpit-sidebar {
+      padding: 14px !important;
+      background: rgba(247, 248, 245, .94);
+    }
+    .cockpit-brand {
+      display: grid;
+      grid-template-columns: 38px minmax(0,1fr);
+      gap: 10px;
+      align-items: center;
+      padding-bottom: 12px;
+      border-bottom: 1px solid var(--cockpit-line);
+    }
+    .cockpit-mark {
+      width: 38px;
+      height: 38px;
+      border-radius: 10px;
+      display: grid;
+      place-items: center;
+      background: #dde6dd;
+      color: var(--cockpit-accent);
+      border: 1px solid var(--cockpit-line);
+    }
+    .cockpit-clock {
+      display: flex;
+      justify-content: space-between;
+      gap: 8px;
+      color: var(--cockpit-muted);
+      padding: 8px 0 10px;
+      border-bottom: 1px solid var(--cockpit-line);
+    }
+    .cockpit-nav {
+      display: flex;
+      flex-direction: column;
+      gap: 12px;
+    }
+    .cockpit-nav-group {
+      display: grid;
+      gap: 5px;
+    }
+    .cockpit-nav-label {
+      font-size: 11px;
+      line-height: 1;
+      color: var(--cockpit-muted);
+      font-weight: 800;
+      letter-spacing: .12em;
+      padding: 0 8px;
+    }
+    .cockpit-nav .nav-btn {
+      width: 100%;
+      height: 36px;
+      display: grid;
+      grid-template-columns: 24px minmax(0,1fr);
+      align-items: center;
+      gap: 8px;
+      padding: 0 10px;
+      border-radius: 9px;
+      font-size: 14px;
+      font-weight: 800;
+      color: var(--cockpit-muted);
+      background: transparent;
+      border: 1px solid transparent;
+      text-align: left;
+    }
+    .cockpit-nav .nav-btn i {
+      width: 22px;
+      text-align: center;
+      color: inherit;
+    }
+    .cockpit-nav .nav-btn.active {
+      color: var(--cockpit-accent);
+      background: #e5ece5;
+      border-color: rgba(34, 92, 77, .24);
+      box-shadow: inset 3px 0 0 var(--cockpit-accent);
+    }
+    .cockpit-nav .nav-btn:hover:not(.active) {
+      background: rgba(229, 236, 229, .64);
+      border-color: rgba(32, 39, 34, .08);
+      transform: none;
+    }
+    .cockpit-hero {
+      display: flex;
+      align-items: end;
+      justify-content: space-between;
+      gap: 16px;
+      min-height: 96px;
+      padding: 18px 20px;
+      border: 1px solid var(--cockpit-line);
+      border-radius: 12px;
+      background: linear-gradient(180deg, #f8f9f6, #eef2ed);
+    }
+    .cockpit-title {
+      margin-top: 10px;
+      font-size: clamp(30px, 4vw, 54px);
+      line-height: .95;
+      font-weight: 900;
+      color: var(--cockpit-ink);
+    }
+    .cockpit-hero-meta {
+      display: flex;
+      flex-wrap: wrap;
+      justify-content: flex-end;
+      gap: 8px;
+      font-size: 12px;
+      color: var(--cockpit-muted);
+      font-weight: 800;
+    }
+    .cockpit-hero-meta span {
+      border: 1px solid var(--cockpit-line);
+      border-radius: 999px;
+      padding: 5px 9px;
+      background: rgba(255,255,255,.45);
+    }
+    .cockpit-grid {
+      display: grid;
+      grid-template-columns: minmax(0, 1.15fr) minmax(280px, .85fr) minmax(300px, .9fr);
+      gap: 14px;
+      align-items: start;
+    }
+    .cockpit-panel {
+      min-height: 430px;
+      background: rgba(247, 248, 245, .96);
+      border: 1px solid var(--cockpit-line);
+      border-radius: 12px;
+      padding: 14px;
+    }
+    .cockpit-panel-head {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 12px;
+      padding-bottom: 12px;
+      border-bottom: 1px solid var(--cockpit-line);
+      margin-bottom: 12px;
+    }
+    .cockpit-panel-head h2 {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      font-size: 15px;
+      font-weight: 900;
+      color: var(--cockpit-ink);
+    }
+    .cockpit-panel-head i {
+      color: var(--cockpit-accent);
+    }
+    .cockpit-list {
+      display: grid;
+      gap: 8px;
+    }
+    .home-signal-card,
+    .overview-link.home-quick-link-card {
+      border-radius: 10px !important;
+      border: 1px solid var(--cockpit-line) !important;
+      background: #fbfcf9 !important;
+      box-shadow: none !important;
+    }
+    .home-signal-card:hover,
+    .overview-link.home-quick-link-card:hover {
+      transform: none !important;
+      border-color: rgba(34, 92, 77, .34) !important;
+    }
+    .cockpit-capture {
+      display: grid;
+      grid-template-columns: minmax(0,1fr) auto;
+      gap: 8px;
+      margin-bottom: 12px;
+    }
+    .cockpit-input {
+      min-width: 0;
+      border: 1px solid var(--cockpit-line);
+      background: #fbfcf9;
+      border-radius: 10px;
+      padding: 10px 12px;
+      outline: none;
+    }
+    .cockpit-input:focus {
+      border-color: rgba(34, 92, 77, .44);
+      box-shadow: 0 0 0 3px rgba(34, 92, 77, .08);
+    }
+    .cockpit-primary,
+    .cockpit-secondary,
+    .cockpit-action-btn {
+      border-radius: 10px;
+      font-weight: 900;
+      border: 1px solid var(--cockpit-line);
+      transition: border-color .16s ease, background .16s ease;
+    }
+    .cockpit-primary {
+      padding: 0 14px;
+      background: var(--cockpit-accent);
+      color: white;
+      border-color: var(--cockpit-accent);
+    }
+    .cockpit-secondary,
+    .cockpit-action-btn {
+      width: 100%;
+      padding: 10px 12px;
+      background: #fbfcf9;
+      color: var(--cockpit-ink);
+      text-align: left;
+    }
+    .cockpit-action-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 8px;
+    }
+    .cockpit-action-btn {
+      display: grid;
+      gap: 4px;
+    }
+    .cockpit-action-btn i {
+      color: var(--cockpit-accent);
+    }
+    .cockpit-action-btn span {
+      font-size: 14px;
+    }
+    .cockpit-action-btn small {
+      color: var(--cockpit-muted);
+      font-size: 11px;
+    }
+    .pill {
+      border-radius: 999px;
+      background: #edf1ed !important;
+      color: var(--cockpit-muted) !important;
+    }
+    .workspace-kicker {
+      background: rgba(34, 92, 77, .08);
+      color: var(--cockpit-accent);
+      letter-spacing: .14em;
+    }
+    @media (max-width: 1279px) {
+      .cockpit-grid {
+        grid-template-columns: 1fr;
+      }
+      .cockpit-panel {
+        min-height: auto;
+      }
+    }
+    @media (max-width: 640px) {
+      .cockpit-hero {
+        display: block;
+      }
+      .cockpit-hero-meta {
+        justify-content: flex-start;
+        margin-top: 14px;
+      }
+      .cockpit-capture,
+      .cockpit-action-grid {
+        grid-template-columns: 1fr;
+      }
+      .cockpit-primary {
+        min-height: 42px;
+      }
+    }
     @media (max-width: 1023px) {
       html, body {
         max-width: 100%;
@@ -481,7 +1204,32 @@
 
   </style>
 </head>
-<body class="font-sans text-calm-ink p-4 md:p-6 lg:p-8">
+<body theme-mode="light" class="font-sans text-calm-ink p-4 md:p-6 lg:p-8">
+  <script>
+    (function () {
+      const THEME_STORAGE_KEY = 'academic_workspace_theme_mode';
+      const getThemeMode = () => {
+        try {
+          const saved = localStorage.getItem(THEME_STORAGE_KEY);
+          if (saved === 'dark' || saved === 'light') return saved;
+        } catch (err) {}
+        return window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light';
+      };
+      const applyThemeMode = () => {
+        document.body?.setAttribute('theme-mode', getThemeMode());
+      };
+      applyThemeMode();
+      const media = window.matchMedia ? window.matchMedia('(prefers-color-scheme: dark)') : null;
+      media?.addEventListener?.('change', () => {
+        try {
+          if (!localStorage.getItem(THEME_STORAGE_KEY)) applyThemeMode();
+        } catch (err) {
+          applyThemeMode();
+        }
+      });
+    })();
+  </script>
+  <a href="https://deerflow.tech" target="_blank" class="deerflow-badge" title="Created By Deerflow">Created By Deerflow</a>
   <div class="mood-picker-overlay-v3" id="attendanceMoodPicker">
     <div class="mood-picker-box-v3">
       <h3 id="attendanceMoodTitle" class="text-lg font-black text-center mb-1">记录心情</h3>
@@ -495,128 +1243,123 @@
       <i class="fa-solid fa-bars"></i>
     </button>
     <div class="min-w-0 flex-1">
-      <div class="text-[11px] text-calm-mute font-bold tracking-wide uppercase">Desktop Workspace</div>
-      <div id="mobileNavSectionTitle" class="font-black text-base truncate">今日总览</div>
+      <div id="mobileWorkspaceCaption" class="text-[11px] text-calm-mute font-bold tracking-wide uppercase">Academic Workspace</div>
+      <div id="mobileNavSectionTitle" class="font-black text-base truncate">今日</div>
     </div>
-    <div class="w-11 h-11"></div>
+    <button id="btnOpenSettingsTop" class="mobile-topbar-btn" title="设置" onclick="navTo('settings-section')">
+      <i class="fa-solid fa-sliders"></i>
+    </button>
   </div>
   <div id="mobileNavBackdrop"></div>
 
   <div id="appLayout" class="max-w-7xl mx-auto grid grid-cols-1 lg:grid-cols-[260px_minmax(0,1fr)] gap-6">
-    <aside id="sidebar" class="soft-card p-4 lg:sticky lg:top-6 h-fit">
-      <div class="flex items-center gap-3 mb-4">
-        <div class="w-12 h-12 rounded-2xl bg-gradient-to-br from-dopamine-orange to-dopamine-pink text-white flex items-center justify-center shadow-soft">
-          <i class="fa-solid fa-graduation-cap text-xl"></i>
-        </div>
-        <div>
-          <div class="font-black text-lg leading-tight">博士工作台</div>
+    <aside id="sidebar" class="soft-card cockpit-sidebar p-4 lg:sticky lg:top-6 h-fit">
+      <div class="cockpit-brand mb-4">
+        <div class="cockpit-mark"><i class="fa-solid fa-compass-drafting"></i></div>
+        <div class="min-w-0">
+          <div id="appBrandName" class="font-black text-base leading-tight">学术工作台</div>
+          <div id="appBrandSubtitle" class="text-xs text-calm-mute mt-1">Research Cockpit</div>
         </div>
       </div>
 
-      <div class="small-stat p-3 mb-4 text-sm">
-        <div id="sidebarNowDate" class="font-bold"></div>
-        <div id="sidebarNowTime" class="text-calm-mute"></div>
+      <div class="cockpit-clock mb-4 text-xs">
+        <span id="sidebarNowDate"></span>
+        <span id="sidebarNowTime" class="mono"></span>
       </div>
 
-      <nav class="space-y-2 mb-5">
-        <button class="nav-btn active w-full text-left px-4 py-3 rounded-2xl font-bold flex items-center justify-between" data-target="home-section"><span>今日总览</span><i class="fa-solid fa-house"></i></button>
-        <button class="nav-btn w-full text-left px-4 py-3 rounded-2xl font-bold flex items-center justify-between" data-target="workflow-section"><span>项目看板</span><i class="fa-solid fa-diagram-project"></i></button>
-        <button class="nav-btn w-full text-left px-4 py-3 rounded-2xl font-bold flex items-center justify-between" data-target="thesis-section"><span>论文进度</span><i class="fa-solid fa-book-open"></i></button>
-        <button class="nav-btn w-full text-left px-4 py-3 rounded-2xl font-bold flex items-center justify-between" data-target="submission-section"><span>投稿管理</span><i class="fa-regular fa-paper-plane"></i></button>
-        <button class="nav-btn w-full text-left px-4 py-3 rounded-2xl font-bold flex items-center justify-between" data-target="reimb-section"><span>报销业务</span><i class="fa-solid fa-receipt"></i></button>
-        <button class="nav-btn w-full text-left px-4 py-3 rounded-2xl font-bold flex items-center justify-between" data-target="habit-section"><span>健康管理</span><i class="fa-solid fa-heart-pulse"></i></button>
-        <button class="nav-btn w-full text-left px-4 py-3 rounded-2xl font-bold flex items-center justify-between" data-target="care-section"><span>心灵关怀</span><i class="fa-solid fa-seedling"></i></button>
-        <button class="nav-btn w-full text-left px-4 py-3 rounded-2xl font-bold flex items-center justify-between" data-target="mentor-section"><span>导师沟通</span><i class="fa-solid fa-user-tie"></i></button>
-        <button class="nav-btn w-full text-left px-4 py-3 rounded-2xl font-bold flex items-center justify-between" data-target="review-section"><span>学术复盘</span><i class="fa-regular fa-heart"></i></button>
-        <button class="nav-btn w-full text-left px-4 py-3 rounded-2xl font-bold flex items-center justify-between" data-target="achievement-section"><span>成就殿堂</span><i class="fa-solid fa-trophy"></i></button>
-        <button class="nav-btn w-full text-left px-4 py-3 rounded-2xl font-bold flex items-center justify-between" data-target="dashboard-section"><span>数据看板</span><i class="fa-solid fa-chart-line"></i></button>
-        <button class="nav-btn w-full text-left px-4 py-3 rounded-2xl font-bold flex items-center justify-between" data-target="settings-section"><span>数据管理</span><i class="fa-solid fa-database"></i></button>
+      <nav class="cockpit-nav">
+        <div class="cockpit-nav-group">
+          <div class="cockpit-nav-label">今日</div>
+          <button class="nav-btn active" data-target="home-section"><i class="fa-solid fa-house"></i><span>今日</span></button>
+        </div>
+        <div class="cockpit-nav-group">
+          <div class="cockpit-nav-label">执行</div>
+          <button class="nav-btn" data-target="execution-section"><i class="fa-solid fa-list-check"></i><span>任务</span></button>
+          <button class="nav-btn" data-target="workflow-section"><i class="fa-solid fa-calendar-days"></i><span>日程</span></button>
+        </div>
+        <div class="cockpit-nav-group">
+          <div class="cockpit-nav-label">科研</div>
+          <button class="nav-btn" data-target="thesis-section"><i class="fa-solid fa-book-open"></i><span>论文</span></button>
+          <button class="nav-btn" data-target="submission-section"><i class="fa-regular fa-paper-plane"></i><span>投稿</span></button>
+        </div>
+        <div class="cockpit-nav-group">
+          <div class="cockpit-nav-label">生活</div>
+          <button class="nav-btn" data-target="wellbeing-section"><i class="fa-solid fa-heart-pulse"></i><span>打卡</span></button>
+          <button class="nav-btn" data-target="habit-section"><i class="fa-solid fa-seedling"></i><span>习惯</span></button>
+        </div>
+        <div class="cockpit-nav-group">
+          <div class="cockpit-nav-label">支持</div>
+          <button class="nav-btn" data-target="mentor-section"><i class="fa-solid fa-user-tie"></i><span>导师</span></button>
+          <button class="nav-btn" data-target="review-section"><i class="fa-solid fa-clipboard-check"></i><span>复盘</span></button>
+          <button class="nav-btn" data-target="reimb-section"><i class="fa-solid fa-receipt"></i><span>报销</span></button>
+        </div>
+        <div class="cockpit-nav-group">
+          <div class="cockpit-nav-label">数据</div>
+          <button class="nav-btn" data-target="dashboard-section"><i class="fa-solid fa-chart-line"></i><span>洞察</span></button>
+          <button class="nav-btn" data-target="settings-section"><i class="fa-solid fa-sliders"></i><span>设置</span></button>
+        </div>
       </nav>
-
     </aside>
 
     <main class="min-w-0">
-      <section id="home-section" class="space-y-6">
+      <section id="home-section" class="space-y-4">
+        <div class="cockpit-hero">
+          <div>
+            <div class="workspace-kicker">Research Cockpit</div>
+            <h1 class="cockpit-title">今日执行舱</h1>
+          </div>
+          <div class="cockpit-hero-meta">
+            <span>今日主线</span>
+            <span>当前时间线</span>
+            <span>快速记录</span>
+          </div>
+        </div>
+
+        <div class="cockpit-grid">
+          <section class="cockpit-panel">
+            <div class="cockpit-panel-head">
+              <h2><i class="fa-solid fa-list-check"></i> 今日主线</h2>
+              <span id="homePriorityBadge" class="pill bg-slate-100 text-slate-700">0 项</span>
+            </div>
+            <div id="homePriorityList" class="cockpit-list text-sm"></div>
+          </section>
+
+          <section class="cockpit-panel">
+            <div class="cockpit-panel-head">
+              <h2><i class="fa-regular fa-clock"></i> 当前时间线</h2>
+              <span id="homeTimelineBadge" class="pill bg-slate-100 text-slate-700">0 条</span>
+            </div>
+            <div id="homeTimelineList" class="cockpit-list text-sm"></div>
+          </section>
+
+          <section class="cockpit-panel">
+            <div class="cockpit-panel-head">
+              <h2><i class="fa-solid fa-pen-to-square"></i> 快速记录</h2>
+            </div>
+            <div class="cockpit-capture">
+              <input id="taskInput" class="cockpit-input" placeholder="新增任务，例如：回复审稿意见">
+              <button id="btnAddTask" class="cockpit-primary">新增任务</button>
+            </div>
+            <div id="homeQuickLinks" class="cockpit-action-grid"></div>
+            <button id="btnHomeMentorTask" class="cockpit-secondary hidden">生成导师下一步</button>
+            <button id="btnHomeReviewTasks" class="cockpit-secondary hidden">生成明日优先</button>
+            <button id="btnHomeOpenExecution" class="hidden">新增日程</button>
+            <div id="homeQuickActionStatus" class="text-xs text-calm-mute mt-3"></div>
+          </section>
+        </div>
+      </section>
+
+      <section id="execution-section" class="section-hidden space-y-6">
         <div class="soft-card p-5 md:p-6">
-          <div class="flex flex-col gap-4">
+          <div class="flex flex-col gap-3">
+            <div class="text-sm font-black uppercase tracking-[0.18em] text-dopamine-sky">Domain 01</div>
             <div>
-              <h1 class="text-2xl md:text-3xl font-black bg-gradient-to-r from-dopamine-orange to-dopamine-pink bg-clip-text text-transparent">今日总览</h1>
+              <h1 class="text-2xl md:text-3xl font-black flex items-center gap-2"><i class="fa-solid fa-diagram-project text-dopamine-sky"></i> 执行系统</h1>
+              <p class="text-calm-mute mt-2"></p>
             </div>
           </div>
         </div>
 
-        <div class="soft-card p-5 md:p-6">
-          <div class="flex flex-col md:flex-row md:items-center md:justify-between gap-4 mb-4">
-            <div>
-              <h2 class="text-xl font-black flex items-center gap-2"><i class="fa-solid fa-chart-pie text-dopamine-purple"></i> 主题统计</h2>
-              <p id="homeStatsRangeLabel" class="text-sm text-calm-mute mt-1">-</p>
-            </div>
-            <div class="inline-flex items-center rounded-full bg-white/80 border border-calm-line p-1">
-              <button class="stats-mode-btn px-3 py-2 rounded-full text-sm font-black transition" data-stats-mode="day">每日</button>
-              <button class="stats-mode-btn px-3 py-2 rounded-full text-sm font-black transition" data-stats-mode="week">每周</button>
-              <button class="stats-mode-btn px-3 py-2 rounded-full text-sm font-black transition" data-stats-mode="month">每月</button>
-            </div>
-          </div>
-          <div id="homeThemeStats" class="grid grid-cols-2 md:grid-cols-4 xl:grid-cols-8 gap-3"></div>
-        </div>
-
-        <div class="soft-card p-5 md:p-6">
-          <div class="flex flex-wrap items-center justify-between gap-4 mb-4 home-checkin-actions">
-            <div>
-              <h2 class="text-xl font-black flex items-center gap-2"><i class="fa-regular fa-clock text-dopamine-orange"></i> 打卡记录</h2>
-            </div>
-            <div class="flex flex-wrap gap-2 items-center">
-              <select id="leaveTypeSelect" class="px-3 py-3 rounded-full border border-calm-line bg-white font-semibold text-sm">
-                <option value="病假">病假</option>
-                <option value="事假">事假</option>
-                <option value="会议">会议</option>
-                <option value="出差">出差</option>
-                <option value="休息">休息</option>
-                <option value="其他">其他</option>
-              </select>
-              <button id="btnLeaveAdd" class="checkin-btn bg-dopamine-purple shadow-soft"><i class="fa-solid fa-umbrella-beach mr-1"></i> 记录请假</button>
-            </div>
-          </div>
-          <div class="grid grid-cols-2 md:grid-cols-4 gap-3 text-sm mb-4">
-            <div class="small-stat p-4"><div class="text-calm-mute">今日完成时段</div><div id="todayCheckinCount" class="text-2xl font-black mt-1 adaptive-stat-value">0/3</div></div>
-            <div class="small-stat p-4"><div class="text-calm-mute">今日工作时长</div><div id="todayWorkMinutes" class="text-2xl font-black text-dopamine-orange mt-1 adaptive-stat-value">0 分钟</div></div>
-            <div class="small-stat p-4"><div class="text-calm-mute">今日心情打卡</div><div id="todayMoodCount" class="text-2xl font-black text-dopamine-pink mt-1 adaptive-stat-value">0/6</div></div>
-            <div class="small-stat p-4"><div class="text-calm-mute">今日请假记录</div><div id="todayLeaveCount" class="text-2xl font-black text-dopamine-purple mt-1 adaptive-stat-value">0</div></div>
-          </div>
-          <div class="checkin-v3-grid mb-4">
-            <div class="period-card-v3" id="card-morning">
-              <div class="period-label-v3">🌅 上午</div>
-              <div class="period-emoji-row-v3" id="emoji-morning"><span class="text-calm-mute text-sm">待打卡</span></div>
-              <div class="time-display-v3" id="time-morning">—</div>
-              <button id="btnCheckinMorning" type="button" onclick="toggleAttendanceSlot('morning')" class="checkin-btn-v3 btn-arrive-v3">到岗 ✓</button>
-            </div>
-            <div class="period-card-v3" id="card-midday">
-              <div class="period-label-v3">☀️ 下午</div>
-              <div class="period-emoji-row-v3" id="emoji-midday"><span class="text-calm-mute text-sm">待打卡</span></div>
-              <div class="time-display-v3" id="time-midday">—</div>
-              <button id="btnCheckinMidday" type="button" onclick="toggleAttendanceSlot('midday')" class="checkin-btn-v3 btn-arrive-v3">到岗 ✓</button>
-            </div>
-            <div class="period-card-v3" id="card-evening">
-              <div class="period-label-v3">🌙 晚上</div>
-              <div class="period-emoji-row-v3" id="emoji-evening"><span class="text-calm-mute text-sm">待打卡</span></div>
-              <div class="time-display-v3" id="time-evening">—</div>
-              <button id="btnCheckinEvening" type="button" onclick="toggleAttendanceSlot('evening')" class="checkin-btn-v3 btn-arrive-v3">到岗 ✓</button>
-            </div>
-          </div>
-          <div class="mt-4 grid grid-cols-1 xl:grid-cols-[minmax(0,1fr)_280px] gap-4">
-            <div class="small-stat p-4">
-              <div class="font-bold mb-2">今日打卡 / 请假明细</div>
-              <div id="todayAttendanceList" class="space-y-2 text-sm text-calm-mute"></div>
-            </div>
-            <div class="small-stat p-4">
-              <div class="font-bold mb-2">可快速修正</div>
-              <div class="space-y-2 text-sm">
-                <button id="btnCloseOpenLogs" class="w-full px-3 py-2 rounded-xl bg-white border border-calm-line font-semibold hover:bg-gray-50">补全今天未结束时段</button>
-                <button id="btnClearTodayLeaves" class="w-full px-3 py-2 rounded-xl bg-white border border-calm-line font-semibold hover:bg-gray-50">清空今日本日请假记录</button>
-              </div>
-            </div>
-          </div>
-        </div>
         <div class="grid grid-cols-1 xl:grid-cols-[380px_minmax(0,1fr)] gap-6 home-core-grid">
           <div class="space-y-6">
             <div class="soft-card p-5">
@@ -625,10 +1368,6 @@
                   <h2 class="text-xl font-black flex items-center gap-2"><i class="fa-solid fa-list-check text-dopamine-pink"></i> 今日执行</h2>
                 </div>
                 <span id="activeTaskBadge" class="pill bg-dopamine-pink/10 text-dopamine-pink">进行中 0</span>
-              </div>
-              <div class="flex flex-col sm:flex-row gap-2 mb-3">
-                <input id="taskInput" class="flex-1 px-4 py-3 rounded-2xl border border-calm-line bg-white" placeholder="临时任务，如：修改实验图、回复审稿意见">
-                <button id="btnAddTask" class="px-4 py-3 rounded-2xl bg-dopamine-pink text-white font-bold">新增临时任务</button>
               </div>
               <div class="small-stat p-3 mb-3 text-sm">
                 <div class="font-bold mb-2">今日需要完成的任务</div>
@@ -733,7 +1472,7 @@
             <div class="flex flex-wrap gap-2 items-center">
               <input id="workflowDate" type="date" class="px-3 py-2 rounded-2xl border border-calm-line bg-white">
               <button id="btnWorkflowToday" class="px-3 py-2 rounded-2xl bg-white border border-calm-line font-semibold">查看今天</button>
-              <button id="btnWorkflowJumpScheduleTop" class="px-3 py-2 rounded-2xl bg-dopamine-sky text-white font-semibold">去总览排时间块</button>
+              <button id="btnWorkflowJumpScheduleTop" class="px-3 py-2 rounded-2xl bg-dopamine-sky text-white font-semibold">新增日程</button>
             </div>
           </div>
           <div id="workflowStats" class="grid grid-cols-2 md:grid-cols-3 xl:grid-cols-6 gap-3"></div>
@@ -830,11 +1569,35 @@
         </div>
       </section>
 
+      <section id="research-section" class="section-hidden space-y-6">
+        <div class="soft-card p-5 md:p-6">
+          <div class="flex flex-col gap-3">
+            <div class="text-sm font-black uppercase tracking-[0.18em] text-dopamine-purple">Domain 02</div>
+            <div>
+              <h1 class="text-2xl md:text-3xl font-black flex items-center gap-2"><i class="fa-solid fa-book-open text-dopamine-purple"></i> 研究系统</h1>
+              <p class="text-calm-mute mt-2"></p>
+            </div>
+          </div>
+        </div>
+
+        <div class="soft-card p-5 md:p-6">
+          <div class="flex items-center justify-between gap-3 mb-4">
+            <div>
+              <h2 class="text-xl font-black flex items-center gap-2"><i class="fa-solid fa-arrows-up-down-left-right text-dopamine-orange"></i> <span id="researchOverviewTitle">科研总览</span></h2>
+              <p class="text-sm text-calm-mute mt-1">把论文里程碑、章节更新、投稿截止和最近版本推进放在一起看。</p>
+            </div>
+            <span id="researchOverviewBadge" class="pill bg-dopamine-purple/10 text-dopamine-purple">0 条</span>
+          </div>
+          <div id="researchOverviewStats" class="grid grid-cols-2 md:grid-cols-4 gap-3 mb-4"></div>
+          <div id="researchOverviewList" class="space-y-3"></div>
+        </div>
+      </section>
+
       <section id="thesis-section" class="section-hidden space-y-6">
         <div class="soft-card p-5 md:p-6">
           <div class="flex flex-col md:flex-row md:items-center md:justify-between gap-4 mb-4">
             <div>
-              <h1 class="text-2xl font-black flex items-center gap-2"><i class="fa-solid fa-book-open text-dopamine-purple"></i> 博士论文进度</h1>
+              <h1 class="text-2xl font-black flex items-center gap-2"><i class="fa-solid fa-book-open text-dopamine-purple"></i> <span id="thesisSectionTitle">研究项目 / 学位论文</span></h1>
             </div>
             <div class="inline-flex items-center rounded-full bg-white/80 border border-calm-line p-1">
               <button class="stats-mode-btn px-3 py-2 rounded-full text-sm font-black transition" data-stats-mode="day">每日</button>
@@ -947,7 +1710,7 @@
         <div class="soft-card p-5 md:p-6">
           <div class="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-4 mb-4">
             <div>
-              <h1 class="text-2xl font-black flex items-center gap-2"><i class="fa-regular fa-paper-plane text-dopamine-sky"></i> 投稿管理</h1>
+              <h1 class="text-2xl font-black flex items-center gap-2"><i class="fa-regular fa-paper-plane text-dopamine-sky"></i> <span id="submissionSectionTitle">投稿管线</span></h1>
             </div>
             <button id="btnToggleSubmissionForm" class="px-4 py-3 rounded-2xl bg-dopamine-sky text-white font-black">添加投稿项目</button>
           </div>
@@ -1096,6 +1859,76 @@
         </dialog>
       </section>
 
+      <section id="wellbeing-section" class="section-hidden space-y-6">
+        <div class="soft-card p-5 md:p-6">
+          <div class="flex flex-col gap-3">
+            <div class="text-sm font-black uppercase tracking-[0.18em] text-dopamine-mint">Domain 03</div>
+            <div>
+              <h1 class="text-2xl md:text-3xl font-black flex items-center gap-2"><i class="fa-solid fa-heart-pulse text-dopamine-mint"></i> 生活系统</h1>
+              <p class="text-calm-mute mt-2"></p>
+            </div>
+          </div>
+        </div>
+
+        <div class="soft-card p-5 md:p-6">
+          <div class="flex flex-wrap items-center justify-between gap-4 mb-4 home-checkin-actions">
+            <div>
+              <h2 class="text-xl font-black flex items-center gap-2"><i class="fa-regular fa-clock text-dopamine-orange"></i> 打卡记录</h2>
+            </div>
+            <div class="flex flex-wrap gap-2 items-center">
+              <select id="leaveTypeSelect" class="px-3 py-3 rounded-full border border-calm-line bg-white font-semibold text-sm">
+                <option value="病假">病假</option>
+                <option value="事假">事假</option>
+                <option value="会议">会议</option>
+                <option value="出差">出差</option>
+                <option value="休息">休息</option>
+                <option value="其他">其他</option>
+              </select>
+              <button id="btnLeaveAdd" class="checkin-btn bg-dopamine-purple shadow-soft"><i class="fa-solid fa-umbrella-beach mr-1"></i> 记录请假</button>
+            </div>
+          </div>
+          <div class="grid grid-cols-2 md:grid-cols-4 gap-3 text-sm mb-4">
+            <div class="small-stat p-4"><div class="text-calm-mute">今日完成时段</div><div id="todayCheckinCount" class="text-2xl font-black mt-1 adaptive-stat-value">0/3</div></div>
+            <div class="small-stat p-4"><div class="text-calm-mute">今日工作时长</div><div id="todayWorkMinutes" class="text-2xl font-black text-dopamine-orange mt-1 adaptive-stat-value">0 分钟</div></div>
+            <div class="small-stat p-4"><div class="text-calm-mute">今日心情打卡</div><div id="todayMoodCount" class="text-2xl font-black text-dopamine-pink mt-1 adaptive-stat-value">0/6</div></div>
+            <div class="small-stat p-4"><div class="text-calm-mute">今日请假记录</div><div id="todayLeaveCount" class="text-2xl font-black text-dopamine-purple mt-1 adaptive-stat-value">0</div></div>
+          </div>
+          <div class="checkin-v3-grid mb-4">
+            <div class="period-card-v3" id="card-morning">
+              <div class="period-label-v3"><i class="fa-solid fa-sun"></i> 上午</div>
+              <div class="period-emoji-row-v3" id="emoji-morning"><span class="text-calm-mute text-sm">待打卡</span></div>
+              <div class="time-display-v3" id="time-morning">—</div>
+              <button id="btnCheckinMorning" type="button" onclick="toggleAttendanceSlot('morning')" class="checkin-btn-v3 btn-arrive-v3">到岗</button>
+            </div>
+            <div class="period-card-v3" id="card-midday">
+              <div class="period-label-v3"><i class="fa-solid fa-cloud-sun"></i> 下午</div>
+              <div class="period-emoji-row-v3" id="emoji-midday"><span class="text-calm-mute text-sm">待打卡</span></div>
+              <div class="time-display-v3" id="time-midday">—</div>
+              <button id="btnCheckinMidday" type="button" onclick="toggleAttendanceSlot('midday')" class="checkin-btn-v3 btn-arrive-v3">到岗</button>
+            </div>
+            <div class="period-card-v3" id="card-evening">
+              <div class="period-label-v3"><i class="fa-solid fa-moon"></i> 晚上</div>
+              <div class="period-emoji-row-v3" id="emoji-evening"><span class="text-calm-mute text-sm">待打卡</span></div>
+              <div class="time-display-v3" id="time-evening">—</div>
+              <button id="btnCheckinEvening" type="button" onclick="toggleAttendanceSlot('evening')" class="checkin-btn-v3 btn-arrive-v3">到岗</button>
+            </div>
+          </div>
+          <div class="mt-4 grid grid-cols-1 xl:grid-cols-[minmax(0,1fr)_280px] gap-4">
+            <div class="small-stat p-4">
+              <div class="font-bold mb-2">今日打卡 / 请假明细</div>
+              <div id="todayAttendanceList" class="space-y-2 text-sm text-calm-mute"></div>
+            </div>
+            <div class="small-stat p-4">
+              <div class="font-bold mb-2">可快速修正</div>
+              <div class="space-y-2 text-sm">
+                <button id="btnCloseOpenLogs" class="w-full px-3 py-2 rounded-xl bg-white border border-calm-line font-semibold hover:bg-gray-50">补全今天未结束时段</button>
+                <button id="btnClearTodayLeaves" class="w-full px-3 py-2 rounded-xl bg-white border border-calm-line font-semibold hover:bg-gray-50">清空今日本日请假记录</button>
+              </div>
+            </div>
+          </div>
+        </div>
+      </section>
+
       <section id="habit-section" class="section-hidden space-y-6">
         <div class="soft-card p-5 md:p-6">
           <div class="flex flex-col md:flex-row md:items-center md:justify-between gap-4 mb-4">
@@ -1179,7 +2012,7 @@
             <div class="space-y-2">
               <input id="customHabitName" class="w-full px-3 py-3 rounded-2xl border border-calm-line bg-white" placeholder="如：拉伸 / 补水 / 冥想 10 分钟">
               <div class="grid grid-cols-2 gap-2">
-                <input id="customHabitIcon" class="px-3 py-3 rounded-2xl border border-calm-line bg-white" placeholder="图标，如：💧">
+                <input id="customHabitIcon" class="px-3 py-3 rounded-2xl border border-calm-line bg-white" placeholder="Font Awesome 图标，如：fa-droplet">
                 <select id="customHabitMode" class="px-3 py-3 rounded-2xl border border-calm-line bg-white">
                   <option value="time">时间记录</option>
                   <option value="duration">时长记录</option>
@@ -1192,6 +2025,30 @@
             </div>
           </div>
           <div id="habitManagerList" class="space-y-2"></div>
+        </div>
+      </section>
+
+      <section id="support-section" class="section-hidden space-y-6">
+        <div class="soft-card p-5 md:p-6">
+          <div class="flex flex-col gap-3">
+            <div class="text-sm font-black uppercase tracking-[0.18em] text-dopamine-pink">Domain 04</div>
+            <div>
+              <h1 class="text-2xl md:text-3xl font-black flex items-center gap-2"><i class="fa-solid fa-seedling text-dopamine-pink"></i> 生活支持总览</h1>
+              <p class="text-calm-mute mt-2">把情绪压力、导师承诺和复盘后的明日优先放在一起，减少靠硬扛维持系统运转。</p>
+            </div>
+          </div>
+        </div>
+
+        <div class="soft-card p-5 md:p-6">
+          <div class="flex items-center justify-between gap-3 mb-4">
+            <div>
+              <h2 class="text-xl font-black flex items-center gap-2"><i class="fa-solid fa-life-ring text-dopamine-purple"></i> <span id="supportOverviewTitle">待处理事项</span></h2>
+              <p class="text-sm text-calm-mute mt-1">优先看导师承诺、明日优先和恢复缺口。</p>
+            </div>
+            <span id="supportOverviewBadge" class="pill bg-dopamine-purple/10 text-dopamine-purple">0 条</span>
+          </div>
+          <div id="supportOverviewStats" class="grid grid-cols-2 md:grid-cols-4 gap-3 mb-4"></div>
+          <div id="supportOverviewList" class="space-y-3"></div>
         </div>
       </section>
 
@@ -1219,18 +2076,18 @@
           <div class="soft-card p-5">
             <div class="flex items-center justify-between gap-3 mb-4">
               <div>
-                <h2 class="text-xl font-black">今日心理健康记录</h2>
+                <h2 id="careRecordTitle" class="text-xl font-black">今日记录</h2>
               </div>
               <button id="btnDeleteCare" class="px-3 py-2 rounded-2xl bg-rose-100 text-rose-600 font-bold shrink-0">清空当天</button>
             </div>
             <div class="small-stat p-4 mb-4">
               <div class="font-black mb-3">此刻状态</div>
               <div class="flex gap-3 text-3xl mb-3">
-                <button class="mood-chip" data-care-mood="overloaded">😣</button>
-                <button class="mood-chip" data-care-mood="tense">😕</button>
-                <button class="mood-chip" data-care-mood="steady">😐</button>
-                <button class="mood-chip" data-care-mood="lighter">🙂</button>
-                <button class="mood-chip" data-care-mood="energized">😊</button>
+                <button class="mood-chip" data-care-mood="overloaded"><i class="fa-solid fa-face-tired"></i></button>
+                <button class="mood-chip" data-care-mood="tense"><i class="fa-solid fa-face-frown"></i></button>
+                <button class="mood-chip" data-care-mood="steady"><i class="fa-solid fa-face-meh"></i></button>
+                <button class="mood-chip" data-care-mood="lighter"><i class="fa-solid fa-face-smile"></i></button>
+                <button class="mood-chip" data-care-mood="energized"><i class="fa-solid fa-face-smile-beam"></i></button>
               </div>
               <div class="grid grid-cols-1 md:grid-cols-2 gap-2">
                 <label class="block">
@@ -1277,7 +2134,7 @@
               <div class="text-sm font-bold mb-1">对自己说的话</div>
               <textarea id="careNote" rows="3" class="w-full px-3 py-3 rounded-2xl border border-calm-line bg-white" placeholder="给现在的自己一句不苛责的提醒"></textarea>
             </label>
-            <button id="btnSaveCare" class="mt-4 w-full px-4 py-3 rounded-2xl bg-dopamine-mint text-white font-black">保存心灵关怀记录</button>
+            <button id="btnSaveCare" class="mt-4 w-full px-4 py-3 rounded-2xl bg-dopamine-mint text-white font-black">保存记录</button>
           </div>
 
           <div class="space-y-6">
@@ -1297,7 +2154,7 @@
         <div class="soft-card p-5 md:p-6">
           <div class="flex flex-col md:flex-row md:items-center md:justify-between gap-4 mb-4">
             <div>
-              <h1 class="text-2xl font-black flex items-center gap-2"><i class="fa-solid fa-user-tie text-dopamine-purple"></i> 导师沟通记录</h1>
+              <h1 class="text-2xl font-black flex items-center gap-2"><i class="fa-solid fa-user-tie text-dopamine-purple"></i> <span id="mentorMainTitle">导师沟通</span></h1>
             </div>
             <div class="flex flex-wrap gap-2 items-center">
               <input id="mentorDate" type="date" class="px-3 py-2 rounded-2xl border border-calm-line bg-white">
@@ -1317,7 +2174,7 @@
           <div class="soft-card p-5">
             <div class="flex items-center justify-between gap-3 mb-4">
               <div>
-                <h2 class="text-xl font-black">今日导师沟通记录</h2>
+                <h2 id="mentorRecordTitle" class="text-xl font-black">导师沟通</h2>
               </div>
               <button id="btnDeleteMentor" class="px-3 py-2 rounded-2xl bg-rose-100 text-rose-600 font-bold shrink-0">清空当天</button>
             </div>
@@ -1426,7 +2283,7 @@
               <textarea id="mentorNextAction" rows="3" class="w-full px-3 py-3 rounded-2xl border border-calm-line bg-white" placeholder="例如：周四前发 1 页摘要；若周五无反馈则主动预约 15 分钟沟通"></textarea>
               <button id="btnMentorNextActionTask" type="button" class="mt-2 px-3 py-2 rounded-xl bg-sky-50 text-dopamine-sky font-bold text-sm">手动加入任务总表</button>
             </label>
-            <button id="btnSaveMentor" class="mt-4 w-full px-4 py-3 rounded-2xl bg-dopamine-purple text-white font-black">保存导师沟通记录</button>
+            <button id="btnSaveMentor" class="mt-4 w-full px-4 py-3 rounded-2xl bg-dopamine-purple text-white font-black">保存记录</button>
           </div>
 
           <div class="space-y-6">
@@ -1450,7 +2307,7 @@
         <div class="soft-card p-5 md:p-6">
           <div class="flex flex-col md:flex-row md:items-center md:justify-between gap-4 mb-4">
             <div>
-              <h1 class="text-2xl font-black flex items-center gap-2"><i class="fa-solid fa-clipboard-check text-dopamine-pink"></i> 学术复盘</h1>
+              <h1 class="text-2xl font-black flex items-center gap-2"><i class="fa-solid fa-clipboard-check text-dopamine-pink"></i> <span id="reviewSectionTitle">复盘与明日计划</span></h1>
             </div>
             <div class="flex flex-wrap gap-2 items-center">
               <input id="reviewDate" type="date" class="px-3 py-2 rounded-2xl border border-calm-line bg-white">
@@ -1482,9 +2339,9 @@
                 <label class="small-stat p-4 block">
                   <div class="text-sm font-bold mb-2">状态 / 能量值</div>
                   <select id="reviewEnergy" class="w-full px-3 py-3 rounded-2xl border border-calm-line bg-white">
-                    <option value="high">☀️ 高：可以攻坚</option>
-                    <option value="medium">😐 中：稳定推进</option>
-                    <option value="low">🌧️ 低：需要降载</option>
+                    <option value="high">高：可以攻坚</option>
+                    <option value="medium">中：稳定推进</option>
+                    <option value="low">低：需要降载</option>
                   </select>
                 </label>
                 <label class="small-stat p-4 block">
@@ -1494,7 +2351,7 @@
               </div>
               <div class="grid grid-cols-1 md:grid-cols-2 gap-3">
                 <label class="block">
-                  <div class="text-sm font-bold mb-1">🎯 今日核心成果</div>
+                  <div class="text-sm font-bold mb-1"><i class="fa-solid fa-bullseye mr-1"></i>今日核心成果</div>
                   <textarea id="reviewAccomplishments" rows="4" class="w-full px-3 py-3 rounded-2xl border border-calm-line bg-white" placeholder="记录具体产出：完成了哪段文字、哪组数据、哪篇论文笔记、哪次沟通结果"></textarea>
                 </label>
                 <label class="block">
@@ -1502,16 +2359,16 @@
                   <textarea id="reviewUnfinished" rows="4" class="w-full px-3 py-3 rounded-2xl border border-calm-line bg-white" placeholder="哪些没完成？卡在哪里？是等待数据、任务太大、能量不足，还是需要求助？"></textarea>
                 </label>
                 <label class="block">
-                  <div class="text-sm font-bold mb-1">💡 学术洞见与新发现</div>
+                  <div class="text-sm font-bold mb-1"><i class="fa-solid fa-lightbulb mr-1"></i>学术洞见与新发现</div>
                   <textarea id="reviewInsights" rows="4" class="w-full px-3 py-3 rounded-2xl border border-calm-line bg-white" placeholder="今天学到的新方法、论文观点、数据规律、写作表达或实验经验"></textarea>
                 </label>
                 <label class="block">
-                  <div class="text-sm font-bold mb-1">🚧 障碍与对策</div>
+                  <div class="text-sm font-bold mb-1"><i class="fa-solid fa-triangle-exclamation mr-1"></i>障碍与对策</div>
                   <textarea id="reviewObstacles" rows="4" class="w-full px-3 py-3 rounded-2xl border border-calm-line bg-white" placeholder="问题是什么？可能原因是什么？下一步如何验证、求助或调整？"></textarea>
                 </label>
               </div>
               <div class="small-stat p-4 mt-4">
-                <div class="font-black mb-3">📅 明日优先任务</div>
+                <div class="font-black mb-3"><i class="fa-solid fa-calendar-day mr-1"></i>明日优先任务</div>
                 <div class="grid grid-cols-1 md:grid-cols-3 gap-2">
                   <input id="reviewTomorrow1" class="px-3 py-3 rounded-2xl border border-calm-line bg-white" placeholder="Priority 1（必做）">
                   <input id="reviewTomorrow2" class="px-3 py-3 rounded-2xl border border-calm-line bg-white" placeholder="Priority 2">
@@ -1548,7 +2405,7 @@
         <div class="soft-card p-5 md:p-6">
           <div class="flex flex-col md:flex-row md:items-center md:justify-between gap-4 mb-5">
             <div>
-              <h1 class="text-2xl font-black flex items-center gap-2"><i class="fa-solid fa-trophy text-dopamine-yellow"></i> 成就殿堂</h1>
+              <h2 class="text-xl font-black flex items-center gap-2"><i class="fa-solid fa-trophy text-dopamine-yellow"></i> <span id="achievementSectionTitle">成就殿堂</span></h2>
             </div>
             <div class="grid grid-cols-2 md:grid-cols-4 gap-3 w-full md:w-auto" id="achievementSummary"></div>
           </div>
@@ -1578,7 +2435,7 @@
         <div class="soft-card p-5 md:p-6">
           <div class="flex flex-col md:flex-row md:items-center md:justify-between gap-4 mb-4">
             <div>
-              <h1 class="text-2xl font-black flex items-center gap-2"><i class="fa-solid fa-chart-line text-dopamine-sky"></i> 数据看板</h1>
+              <h1 class="text-2xl font-black flex items-center gap-2"><i class="fa-solid fa-chart-line text-dopamine-sky"></i> 数据洞察</h1>
             </div>
             <select id="dashboardRange" class="px-3 py-3 rounded-2xl border border-calm-line bg-white font-semibold">
               <option value="1">今日</option>
@@ -1628,9 +2485,24 @@
 
       <section id="settings-section" class="section-hidden space-y-6">
         <div class="soft-card p-5 md:p-6">
-          <h1 class="text-2xl font-black flex items-center gap-2 mb-4"><i class="fa-solid fa-database text-dopamine-purple"></i> 数据管理</h1>
+          <h1 class="text-2xl font-black flex items-center gap-2 mb-4"><i class="fa-solid fa-sliders text-dopamine-purple"></i> <span id="settingsSectionTitle">工作台设置</span></h1>
           <div class="grid grid-cols-1 xl:grid-cols-[360px_minmax(0,1fr)] gap-6">
             <div class="space-y-4">
+              <div class="small-stat p-4 space-y-4">
+                <div>
+                  <div class="font-black text-lg">角色与模块中心</div>
+                  <div class="text-sm text-calm-mute mt-1">在这里管理角色预设与模块开关。</div>
+                </div>
+                <div class="subtle-panel p-4">
+                  <div class="text-sm text-calm-mute">角色预设</div>
+                  <div id="workspaceProfileName" class="text-2xl font-black mt-2">通用研究者</div>
+                  <div id="workspaceProfileDesc" class="text-sm text-calm-mute mt-2">用于快速切换默认模块组合。</div>
+                </div>
+                <div id="workspacePresetButtons" class="flex flex-wrap gap-2"></div>
+                <div class="font-black">模块中心</div>
+                <div id="moduleCenterSummary" class="text-sm text-calm-mute">模块状态</div>
+                <div id="moduleCenterList" class="space-y-3"></div>
+              </div>
               <div class="storage-status-card p-4 text-sm space-y-3">
                 <div class="flex items-center justify-between gap-3">
                   <div class="font-black">当前存储状态</div>
@@ -1845,7 +2717,8 @@
     const ATTENDANCE_SLOT_WINDOWS = {
       morning: { start:'06:00', end:'11:59' },
       midday: { start:'12:00', end:'17:59' },
-      evening: { start:'18:00', end:'23:59' }
+      // 夜间时段允许跨午夜：从 18:00 到次日 04:00
+      evening: { start:'18:00', end:'04:00' }
     };
     const DEFAULT_HABITS = [
       { id:'habit_early_sleep', name:'早睡', icon:'🌙', mode:'time', enabled:true, locked:false },
@@ -1878,7 +2751,15 @@
 
     function uid(prefix='id') { return `${prefix}_${Date.now()}_${Math.random().toString(36).slice(2,8)}`; }
     function pad(n) { return String(n).padStart(2,'0'); }
-    function todayStr(offset=0) { const d = new Date(); d.setDate(d.getDate()+offset); return `${d.getFullYear()}-${pad(d.getMonth()+1)}-${pad(d.getDate())}`; }
+    function todayStr(offset=0) {
+      const d = new Date();
+      // 需求：凌晨 4 点之前视为前一天（仅在默认 offset=0 时生效），便于查看“前一天”的打卡记录
+      if (Number(offset) === 0 && d.getHours() < 4) {
+        d.setDate(d.getDate() - 1);
+      }
+      d.setDate(d.getDate() + offset);
+      return `${d.getFullYear()}-${pad(d.getMonth()+1)}-${pad(d.getDate())}`;
+    }
     function nowTime() { const d = new Date(); return `${pad(d.getHours())}:${pad(d.getMinutes())}`; }
     function nowDateTime() { const d = new Date(); return `${todayStr()} ${pad(d.getHours())}:${pad(d.getMinutes())}:${pad(d.getSeconds())}`; }
     function parseYMD(dateStr) {
@@ -1907,7 +2788,14 @@
       const range = ATTENDANCE_SLOT_WINDOWS[slotKey];
       if (!range) return false;
       const minute = hmToMinutes(hm);
-      return minute >= hmToMinutes(range.start) && minute <= hmToMinutes(range.end);
+      const startMin = hmToMinutes(range.start);
+      const endMin = hmToMinutes(range.end);
+      // 普通区间（同日）
+      if (endMin >= startMin) {
+        return minute >= startMin && minute <= endMin;
+      }
+      // 跨午夜区间（例如 18:00 - 04:00）：允许在 start..23:59 或 00:00..end 之间
+      return minute >= startMin || minute <= endMin;
     }
     function attendancePermission(slotKey, currentLog, nowHm=nowTime()) {
       const slot = attendanceSlotMeta(slotKey);

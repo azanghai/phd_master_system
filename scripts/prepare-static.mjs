@@ -15,17 +15,25 @@ if (!fs.existsSync(sourcePath)) {
 
 let html = fs.readFileSync(sourcePath, "utf8");
 
-html = html.replace(/<title>[\s\S]*?<\/title>/, "<title>博士工作台</title>");
+html = html.replace(/<title>[\s\S]*?<\/title>/, "<title>学术工作台</title>");
 html = html.replace(/\s*<script src="https:\/\/cdn\.tailwindcss\.com"><\/script>\r?\n/, "\n");
 html = html.replace(/\s*<script src="https:\/\/cdn\.jsdelivr\.net\/npm\/chart\.js@[^"]+"><\/script>\r?\n/, "\n");
 html = html.replace(/\s*<link rel="stylesheet" href="https:\/\/cdnjs\.cloudflare\.com\/ajax\/libs\/font-awesome\/[^"]+">\r?\n/, "\n");
 html = html.replace(/\s*<script>\s*tailwind\.config = \{[\s\S]*?<\/script>\r?\n/, "\n");
 html = html.replace(
-  "<title>博士工作台</title>",
-  `<title>博士工作台</title>
+  "<title>学术工作台</title>",
+  `<title>学术工作台</title>
   <link rel="stylesheet" href="./assets/tailwind.css" />
   <link rel="stylesheet" href="./assets/fontawesome/css/all.min.css" />
   <script src="./assets/chart.umd.min.js"></script>`
+);
+html = html.replace(
+  /<script>\s*const STORAGE_KEY[\s\S]*?<\/script>\s*<script type="module" src="\.\/sync\/ui\.js"><\/script>/,
+  `<script src="./scripts/state-migration.js"></script>
+  <script src="./scripts/navigation.js"></script>
+  <script src="./scripts/domain-renderers.js"></script>
+  <script src="./scripts/bindings.js"></script>
+  <script type="module" src="./sync/ui.js"></script>`
 );
 
 fs.mkdirSync(appDir, { recursive: true });
