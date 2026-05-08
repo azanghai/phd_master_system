@@ -1,5 +1,7 @@
-import { httpRequest, secrets } from "../state.js";
+import { httpRequest, httpRequestBinary, secrets } from "../state.js";
 import { MANIFEST_FILE, SYNC_ROOT_DIR } from "../types.js";
+
+const ASSET_DIR = "assets";
 
 function trimSlash(value) {
   return String(value || "").replace(/\/+$/, "");
@@ -43,6 +45,12 @@ function statusMessage(status, action, path = "") {
   if (status === 409) return `坚果云目录冲突（409）：${label}`;
   if (status === 423) return `坚果云资源被锁定（423）：${label}`;
   return `坚果云请求失败（${status}）：${label}`;
+}
+
+function safeAssetKey(storageKey = "") {
+  const key = String(storageKey || "").trim().toLowerCase();
+  if (!/^[a-f0-9]{64}(?:\.[a-z0-9]{1,12})?$/.test(key)) throw new Error(`附件路径不安全: ${storageKey}`);
+  return key;
 }
 
 function parsePropfindEntries(xml = "") {
@@ -106,6 +114,20 @@ export class JianguoyunWebDavProvider {
     throw new Error(`${statusMessage(mkcol.status, "创建目录")} ${mkcol.body || ""}`.trim());
   }
 
+  async ensureSubDir(path) {
+    await this.ensureDir();
+    const probe = await this.request("PROPFIND", path, { depth: 0 });
+    if ([200, 207].includes(probe.status)) return true;
+    if (![404, 409].includes(probe.status) && probe.status >= 400) throw new Error(statusMessage(probe.status, "访问目录", path));
+    const mkcol = await this.request("MKCOL", path);
+    if ([200, 201, 204, 405].includes(mkcol.status)) return true;
+    throw new Error(`${statusMessage(mkcol.status, "创建目录", path)} ${mkcol.body || ""}`.trim());
+  }
+
+  assetPath(storageKey) {
+    return `${ASSET_DIR}/${safeAssetKey(storageKey)}`;
+  }
+
   async testConnection() {
     await this.ensureDir();
     await this.readText(MANIFEST_FILE, { noCache: true }).catch((err) => {
@@ -138,6 +160,34 @@ export class JianguoyunWebDavProvider {
     if (res.status < 200 || res.status >= 300) throw new Error(`${statusMessage(res.status, "写入文件", path)} ${res.body || ""}`.trim());
   }
 
+  async statAsset(storageKey) {
+    return await this.stat(this.assetPath(storageKey));
+  }
+
+  async uploadAsset(storageKey, dataBase64, contentType = "application/octet-stream") {
+    await this.ensureSubDir(ASSET_DIR);
+    const path = this.assetPath(storageKey);
+    const res = await this.requestBinary("PUT", path, {
+      bodyBase64: dataBase64,
+      headers: { "Content-Type": contentType || "application/octet-stream" },
+    });
+    if (res.status < 200 || res.status >= 300) throw new Error(`${statusMessage(res.status, "写入附件", path)} ${res.body || ""}`.trim());
+  }
+
+  async downloadAsset(storageKey) {
+    const path = this.assetPath(storageKey);
+    const res = await this.requestBinary("GET", path, {
+      headers: {
+        "Cache-Control": "no-cache, no-store, must-revalidate",
+        Pragma: "no-cache",
+        Expires: "0",
+      },
+    });
+    if (res.status === 404) return null;
+    if (res.status < 200 || res.status >= 300) throw new Error(statusMessage(res.status, "读取附件", path));
+    return res.bodyBase64 || "";
+  }
+
   async deleteFile(path) {
     const res = await this.request("DELETE", path);
     if ([200, 202, 204, 404].includes(res.status)) return;
@@ -153,6 +203,17 @@ export class JianguoyunWebDavProvider {
     if (![200, 207].includes(res.status)) throw new Error(statusMessage(res.status, "列出目录", path || "/"));
     const entries = parsePropfindEntries(res.body);
     return entries.filter((item) => item.name && !item.isDir);
+  }
+
+  async requestBinary(method, path = "", { bodyBase64 = null, headers = {} } = {}) {
+    const { username, password } = await this.credentials();
+    return await httpRequestBinary(method, this.url(path), {
+      headers: {
+        Authorization: auth(username, password),
+        ...headers,
+      },
+      bodyBase64,
+    });
   }
 
   async stat(path) {

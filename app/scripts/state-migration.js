@@ -116,6 +116,7 @@ const STORAGE_KEY = 'phd_master_workspace_merged_v1';
           execution: true,
           research: true,
           wellbeing: true,
+          care: true,
           insights: true,
           reimburse: false,
           submissions: false,
@@ -134,6 +135,7 @@ const STORAGE_KEY = 'phd_master_workspace_merged_v1';
           execution: true,
           research: true,
           wellbeing: true,
+          care: true,
           insights: true,
           reimburse: false,
           submissions: true,
@@ -152,6 +154,7 @@ const STORAGE_KEY = 'phd_master_workspace_merged_v1';
           execution: true,
           research: true,
           wellbeing: true,
+          care: true,
           insights: true,
           reimburse: false,
           submissions: true,
@@ -207,7 +210,19 @@ const STORAGE_KEY = 'phd_master_workspace_merged_v1';
         primarySection: 'wellbeing-section',
         keywords: Object.freeze(['习惯', '恢复', '打卡', '健康', '饮食', '体重']),
         discoveryPriority: 86,
-        sections: Object.freeze(['wellbeing-section', 'habit-section', 'care-section', 'support-section'])
+        sections: Object.freeze(['wellbeing-section', 'habit-section', 'support-section'])
+      }),
+      care: Object.freeze({
+        id: 'care',
+        label: '心灵关怀',
+        entryLabel: '心灵关怀',
+        description: '记录压力、能量和恢复动作，先把自己稳住。',
+        icon: 'fa-seedling',
+        route: 'life-domain',
+        primarySection: 'care-section',
+        keywords: Object.freeze(['关怀', '情绪', '压力', '恢复']),
+        discoveryPriority: 82,
+        sections: Object.freeze(['care-section'])
       }),
       mentor: Object.freeze({
         id: 'mentor',
@@ -259,7 +274,7 @@ const STORAGE_KEY = 'phd_master_workspace_merged_v1';
       })
     });
     const MODULE_IDS = Object.freeze(Object.keys(MODULE_REGISTRY));
-    const MODULE_ORDER_DEFAULT = Object.freeze(['execution', 'research', 'wellbeing', 'submissions', 'mentor', 'review', 'reimburse', 'insights']);
+    const MODULE_ORDER_DEFAULT = Object.freeze(['execution', 'research', 'wellbeing', 'care', 'submissions', 'mentor', 'review', 'reimburse', 'insights']);
     const LAUNCHER_ENTRY_DEFAULT = Object.freeze(['execution', 'schedule', 'research', 'submissions', 'wellbeing', 'care', 'mentor', 'review', 'reimburse', 'insights']);
     const HOME_LAYOUT_DEFAULT = Object.freeze(['priorities', 'timeline', 'risks', 'quick-actions', 'modules']);
     const PRIMARY_ROUTES = Object.freeze(['home-section', 'execution-domain', 'research-domain', 'life-domain', 'insights-domain', 'settings-section']);
@@ -681,7 +696,6 @@ const STORAGE_KEY = 'phd_master_workspace_merged_v1';
     function discoveryModuleForEntry(entryId='') {
       if (MODULE_IDS.includes(entryId)) return entryId;
       if (entryId === 'schedule') return 'execution';
-      if (entryId === 'care') return 'wellbeing';
       return '';
     }
     function discoveryPrimarySection(entryId='') {
@@ -714,9 +728,6 @@ const STORAGE_KEY = 'phd_master_workspace_merged_v1';
     function openLauncherEntry(entryId='', { enableIfNeeded=false } = {}) {
       const moduleId = discoveryModuleForEntry(entryId);
       if (!moduleId) return;
-      if (!isModuleEnabled(moduleId) && enableIfNeeded) {
-        setModuleEnabled(moduleId, true, { rerender:false });
-      }
       if (!isModuleEnabled(moduleId)) return;
       pendingRecentEntry = String(entryId || '').trim();
       navTo(discoveryPrimarySection(entryId) || moduleMeta(moduleId)?.route || 'home-section');
@@ -1387,6 +1398,8 @@ const STORAGE_KEY = 'phd_master_workspace_merged_v1';
 
     function normalizeReimbFile(item) {
       if (!item || typeof item !== 'object') return null;
+      const attachmentRef = window.PhdWorkbenchAttachments?.normalizeRef?.(item);
+      if (attachmentRef) return attachmentRef;
       const dataUrl = String(item.dataUrl || item.url || '');
       const name = String(item.name || item.filename || '文件');
       if (!dataUrl) return null;
@@ -1568,6 +1581,15 @@ const STORAGE_KEY = 'phd_master_workspace_merged_v1';
       queueJsonFilePersist(raw);
       window.PhdWorkbenchSyncAdapter?.notifyLocalChange?.();
       if (isSectionVisible('settings-section')) refreshSettings();
+    }
+    async function migrateLegacyAttachmentsInState({ render = false } = {}) {
+      if (!window.PhdWorkbenchAttachments?.migrateLegacyDataUrls) return 0;
+      const count = await window.PhdWorkbenchAttachments.migrateLegacyDataUrls(state);
+      if (count > 0) {
+        saveState();
+        if (render && typeof renderAll === 'function') renderAll();
+      }
+      return count;
     }
     function persistUiState() {
       state.meta = normalizeStateMeta(state.meta);

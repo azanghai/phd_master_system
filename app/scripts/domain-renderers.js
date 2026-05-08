@@ -2878,7 +2878,6 @@
 
     function refreshSettings() {
       const raw = localStorage.getItem(STORAGE_KEY) || serializeState();
-      $('jsonEditor').value = raw;
       $('storageSizeText').textContent = bytesToKB(new Blob([raw]).size);
       $('settingsRefreshTime').textContent = nowDateTime();
       if ($('storageBackendText')) $('storageBackendText').textContent = storageMeta.backend;
@@ -2904,29 +2903,11 @@
       renderWorkspaceControlCenter();
     }
 
-    function exportJson() {
-      const blob = new Blob([JSON.stringify(state, null, 2)], { type:'application/json' });
-      const url = URL.createObjectURL(blob);
-      const a = document.createElement('a');
-      a.href = url; a.download = `academic_workspace_backup_${todayStr()}.json`; a.click();
-      URL.revokeObjectURL(url);
-    }
-    async function copyJson() {
-      await navigator.clipboard.writeText(JSON.stringify(state, null, 2));
-      alert('已复制到剪贴板。');
-    }
-    function importJsonText(raw) {
-      try {
-        const parsed = JSON.parse(raw);
-        replaceState(buildStateFromParsed(parsed));
-        saveState(); renderAll(); alert('导入完成。');
-      } catch (err) { alert('JSON 导入失败，请检查格式。'); }
-    }
-
     async function clearAllData() {
       if (!confirm('确定清空全部数据吗？此操作不可撤销。')) return;
       localStorage.removeItem(STORAGE_KEY);
       await clearJsonFileStorage();
+      await window.PhdWorkbenchAttachments?.clearLocalAttachments?.();
       location.reload();
     }
 
@@ -3190,40 +3171,46 @@
     let reimbDoneFiles = [];
     let reimbCompleteId = null;
 
-    function readFilesToArray(fileList, targetArr, previewId, labelId) {
+    async function readFilesToArray(fileList, targetArr, previewId, labelId) {
       const files = Array.from(fileList || []);
       if (!files.length) return;
-      let remaining = files.length;
-      files.forEach(file => {
-        const reader = new FileReader();
-        reader.onload = e => {
-          targetArr.push({ id: uid('rf'), name: file.name, dataUrl: e.target.result, type: file.type || '' });
-          remaining -= 1;
-          if (remaining === 0) {
-            renderReimbFilePreview(targetArr, previewId);
-            if (labelId && $(labelId)) {
-              $(labelId).textContent = `${targetArr.length} 个文件已选`;
-              $(labelId).classList.add('text-dopamine-orange');
-            }
-          }
-        };
-        reader.readAsDataURL(file);
-      });
+      if (labelId && $(labelId)) {
+        $(labelId).textContent = `正在导入 ${files.length} 个文件...`;
+        $(labelId).classList.add('text-dopamine-orange');
+      }
+      const imported = [];
+      for (const file of files) {
+        try {
+          if (!window.PhdWorkbenchAttachments?.importAttachment) throw new Error('附件服务未初始化');
+          imported.push(await window.PhdWorkbenchAttachments.importAttachment(file));
+        } catch (err) {
+          console.error(err);
+          alert(`附件导入失败：${file.name}`);
+        }
+      }
+      targetArr.push(...imported.filter(Boolean));
+      renderReimbFilePreview(targetArr, previewId);
+      if (labelId && $(labelId)) {
+        $(labelId).textContent = `${targetArr.length} 个文件已选`;
+        $(labelId).classList.add('text-dopamine-orange');
+      }
     }
     function renderReimbFilePreview(files, previewId) {
       const el = $(previewId);
       if (!el) return;
       el.innerHTML = (files || []).map(file => `<span class="pill bg-dopamine-sky/10 text-dopamine-sky">${iconLabel('fa-paperclip', file.name)}</span>`).join('');
     }
-    function openReimbFileById(kind, id, fileId) {
+    async function openReimbFileById(kind, id, fileId) {
       const source = state.reimb?.[kind] || [];
       const item = source.find(v => v.id === id);
       const file = [...(item?.invoices || []), ...(item?.receipts || [])].find(v => v.id === fileId);
-      if (!file?.dataUrl) return;
-      const a = document.createElement('a');
-      a.href = file.dataUrl;
-      a.download = file.name || 'file';
-      a.click();
+      if (!file) return;
+      try {
+        await window.PhdWorkbenchAttachments?.openAttachment?.(file);
+      } catch (err) {
+        console.error(err);
+        alert(err?.message || '附件打开失败');
+      }
     }
     function addReimb() {
       const content = $('reimbContent')?.value.trim();

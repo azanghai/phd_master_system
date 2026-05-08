@@ -48,8 +48,21 @@ function engine() {
     applyState: a.applyState,
     exportNormalizedState: a.exportNormalizedState,
     replaceStateFromSync: a.replaceStateFromSync,
+    assetStore: window.PhdWorkbenchAttachments,
   });
 }
+
+window.PhdWorkbenchSyncAssets = {
+  downloadAsset: async (ref) => {
+    if (!config) {
+      config = await readSyncConfig();
+      config.provider = "jianguoyun";
+    }
+    const dataBase64 = await provider().downloadAsset(ref?.storageKey || "");
+    if (!dataBase64) throw new Error("云端没有该附件文件");
+    return dataBase64;
+  },
+};
 
 async function saveConfig(patch = {}) {
   config = { ...config, ...patch, provider: "jianguoyun" };

@@ -96,6 +96,10 @@ pub fn run() {
       sync_fs::sync_read_cache_file,
       sync_fs::save_conflict_backup,
       sync_fs::sync_write_conflict_file,
+      sync_fs::attachment_file_exists,
+      sync_fs::save_attachment_file,
+      sync_fs::read_attachment_file,
+      sync_fs::clear_attachment_files,
       sync_fs::sync_http_request
     ])
     .run(tauri::generate_context!())

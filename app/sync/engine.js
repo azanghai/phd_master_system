@@ -65,13 +65,14 @@ function compareManifests(left, right) {
 }
 
 export class SyncEngine {
-  constructor({ provider, getState, normalizeState, applyState, exportNormalizedState, replaceStateFromSync }) {
+  constructor({ provider, getState, normalizeState, applyState, exportNormalizedState, replaceStateFromSync, assetStore = null }) {
     this.provider = provider;
     this.getState = getState;
     this.normalizeState = normalizeState;
     this.applyState = applyState;
     this.exportNormalizedState = exportNormalizedState || (() => this.normalizeState(this.getState()));
     this.replaceStateFromSync = replaceStateFromSync || ((nextState, meta) => this.applyState(nextState, meta));
+    this.assetStore = assetStore;
     this.emptyManifest = null;
   }
 
@@ -130,6 +131,23 @@ export class SyncEngine {
     });
   }
 
+  async uploadReferencedAssets(state) {
+    const store = this.assetStore;
+    if (!store?.collectRefs || !store?.readLocalAttachmentBase64 || !this.provider?.uploadAsset) return [];
+    const refs = store.collectRefs(state || {});
+    const uploaded = [];
+    for (const ref of refs) {
+      if (!ref?.storageKey) continue;
+      const dataBase64 = await store.readLocalAttachmentBase64(ref.storageKey).catch(() => null);
+      if (!dataBase64) continue;
+      const remote = this.provider.statAsset ? await this.provider.statAsset(ref.storageKey) : null;
+      if (remote && (!ref.size || Number(remote.size) === Number(ref.size))) continue;
+      await this.provider.uploadAsset(ref.storageKey, dataBase64, ref.type || "application/octet-stream");
+      uploaded.push(ref.storageKey);
+    }
+    return uploaded;
+  }
+
   async fullUpload() {
     const lock = await acquireSyncLock("sync-full-upload");
     if (!lock) throw new Error("同步进行中，请稍后再试");
@@ -144,6 +162,7 @@ export class SyncEngine {
         revision: Math.max(0, asNumber(remoteManifest?.revision, 0)) + 1,
       });
       for (const name of SYNC_FILE_NAMES) await this.provider.writeText(name, local.files[name]);
+      const uploadedAssets = await this.uploadReferencedAssets(this.exportNormalizedState());
       const echoed = await this.writeRemoteManifest(local.manifest);
       await writeLocalManifestCache(echoed);
       const meta = await getSyncMeta();
@@ -153,7 +172,8 @@ export class SyncEngine {
         lastResult: "全量上传完成",
         lastMode: "FORCED_UPLOAD",
       });
-      return { message: "全量上传完成", conflicts: [], firstSyncMode: FIRST_SYNC_MODE.UPLOAD_LOCAL };
+      const assetSuffix = uploadedAssets.length ? `，附件 ${uploadedAssets.length} 个` : "";
+      return { message: `全量上传完成${assetSuffix}`, conflicts: [], firstSyncMode: FIRST_SYNC_MODE.UPLOAD_LOCAL, uploadedAssets };
     } finally {
       await releaseSyncLock(lock.token);
     }
@@ -294,6 +314,7 @@ export class SyncEngine {
       for (const name of uploadNames) {
         await this.provider.writeText(name, postDownload.files[name]);
       }
+      const uploadedAssets = await this.uploadReferencedAssets(this.normalizeState(this.exportNormalizedState()));
 
       const remoteRevision = asNumber(remoteBase.revision, 0);
       const baseRevision = asNumber(baseManifest.revision, 0);
@@ -322,6 +343,7 @@ export class SyncEngine {
         firstSyncMode,
         downloaded: Object.keys(downloadedFiles),
         uploaded: uploadNames,
+        uploadedAssets,
       };
     } finally {
       await releaseSyncLock(lock.token);

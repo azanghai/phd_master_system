@@ -83,7 +83,13 @@
         const routeId = btn.dataset.target || '';
         const isVisible = isRouteVisible(routeId);
         btn.classList.toggle('hidden', !isVisible);
+        btn.style.display = isVisible ? '' : 'none';
         btn.classList.toggle('active', routeId === activeTarget);
+      });
+      document.querySelectorAll('.cockpit-nav-group').forEach(group => {
+        const hasVisibleButton = Array.from(group.querySelectorAll('.nav-btn')).some(btn => !btn.classList.contains('hidden'));
+        group.classList.toggle('hidden', !hasVisibleButton);
+        group.style.display = hasVisibleButton ? '' : 'none';
       });
       const activeSpan = document.querySelector(`.nav-btn[data-target="${activeTarget}"] span`);
       if ($('mobileNavSectionTitle') && !activeSpan) $('mobileNavSectionTitle').textContent = copy.brand;
@@ -140,17 +146,6 @@
           keywords: ['时间块', '日程', 'schedule'],
           discoveryPriority: 98
         },
-        care: {
-          id: 'care',
-          moduleId: 'wellbeing',
-          label: '心灵关怀',
-          description: '记录压力、能量和恢复动作，先把自己稳住。',
-          icon: 'fa-seedling',
-          route: 'life-domain',
-          primarySection: 'care-section',
-          keywords: ['关怀', '情绪', '压力', '恢复'],
-          discoveryPriority: 82
-        }
       };
       if (presets[entryId]) {
         const preset = presets[entryId];
@@ -188,7 +183,6 @@
       const byModuleOrder = Array.isArray(state.ui?.moduleOrder) ? state.ui.moduleOrder : MODULE_ORDER_DEFAULT;
       byModuleOrder.forEach(id => {
         if (id === 'execution') ordered.push('execution', 'schedule');
-        else if (id === 'wellbeing') ordered.push('wellbeing', 'care');
         else ordered.push(id);
       });
       LAUNCHER_ENTRY_DEFAULT.forEach(id => {
@@ -202,15 +196,16 @@
       const pushPick = (id) => {
         if (!id || picks.includes(id)) return;
         const meta = launcherEntryMeta(id);
-        if (!meta) return;
+        if (!meta?.enabled) return;
         picks.push(id);
       };
       if (openTasksList().some(task => task.dueDate && task.dueDate <= date) || todayExecutionTasks(date).some(task => task.status !== 'done')) pushPick('execution');
       if ((getDayTimeBlocks(date) || []).length || todayExecutionTasks(date).some(task => task.todayBucket === 'must' || task.todayBucket === 'should')) pushPick('schedule');
       if ((state.thesis?.milestones || []).some(item => !item.done && item.due && diffDays(date, item.due) >= 0 && diffDays(date, item.due) <= 14)) pushPick('research');
       if (state.submissions.some(item => item.deadline && !['已接收','已见刊/已收录','搁置/拒稿'].includes(item.stage) && diffDays(date, item.deadline) >= 0 && diffDays(date, item.deadline) <= 14)) pushPick('submissions');
-      if (mentorPendingItems(date).length) pushPick('mentor');
-      if (!careCountOn(date) || todayHabitCompletion(date) < 50) pushPick(!careCountOn(date) ? 'care' : 'wellbeing');
+      if (isModuleEnabled('mentor') && mentorPendingItems(date).length) pushPick('mentor');
+      if (isModuleEnabled('care') && !careCountOn(date)) pushPick('care');
+      if (isModuleEnabled('wellbeing') && todayHabitCompletion(date) < 50) pushPick('wellbeing');
       if (isModuleEnabled('review') && reviewPriorityCount(dailyReviewEntryOn(date)) < 2) pushPick('review');
       if (!picks.length) {
         launcherEntryOrder().forEach(id => {
@@ -223,7 +218,7 @@
 
     function launcherStatusSummary() {
       const recs = recommendedLauncherEntries();
-      const recentCount = (state.ui?.recentModules || []).length;
+      const recentCount = (state.ui?.recentModules || []).map(launcherEntryMeta).filter(entry => entry?.enabled).length;
       if (recs.length) return `优先看 ${recs.length} 个推荐入口，最近使用已记录 ${recentCount} 条。`;
       return recentCount ? `已记录最近使用 ${recentCount} 条，你可以直接继续上次的工作。` : '先选择一个入口开始，之后这里会自动记住你的常用路径。';
     }
@@ -271,7 +266,7 @@
         btn.onclick = () => openLauncherEntry(btn.dataset.launcherEnter);
       });
       scope.querySelectorAll('[data-launcher-enable]').forEach(btn => {
-        btn.onclick = () => openLauncherEntry(btn.dataset.launcherEnable, { enableIfNeeded:true });
+        btn.onclick = () => openLauncherEntry(btn.dataset.launcherEnable);
       });
       scope.querySelectorAll('[data-launcher-pin]').forEach(btn => {
         btn.onclick = (event) => {
@@ -290,11 +285,11 @@
       const recommendedHost = $('launcherRecommendedList');
       const directoryHost = $('launcherDirectoryList');
       if (!recentHost || !recommendedHost || !directoryHost) return;
-      const directoryEntries = launcherEntryOrder().map(launcherEntryMeta).filter(Boolean);
-      const recentEntries = (state.ui?.recentModules || []).map(launcherEntryMeta).filter(Boolean).slice(0, 5);
-      const pinnedEntries = (state.ui?.pinnedModules || []).map(launcherEntryMeta).filter(Boolean).slice(0, 5);
-      const recommendedEntries = recommendedLauncherEntries().map(launcherEntryMeta).filter(Boolean);
-      const disabledEntries = directoryEntries.filter(entry => !entry.enabled);
+      const visibleEntry = entry => entry?.enabled;
+      const directoryEntries = launcherEntryOrder().map(launcherEntryMeta).filter(visibleEntry);
+      const recentEntries = (state.ui?.recentModules || []).map(launcherEntryMeta).filter(visibleEntry).slice(0, 5);
+      const pinnedEntries = (state.ui?.pinnedModules || []).map(launcherEntryMeta).filter(visibleEntry).slice(0, 5);
+      const recommendedEntries = recommendedLauncherEntries().map(launcherEntryMeta).filter(visibleEntry);
 
       if ($('launcherProfileSummary')) $('launcherProfileSummary').textContent = workspaceCopy().profileLabel;
       if ($('launcherStatusSummary')) $('launcherStatusSummary').textContent = launcherStatusSummary();
@@ -302,7 +297,7 @@
       if ($('launcherRecentCount')) $('launcherRecentCount').textContent = `${recentEntries.length} 个`;
       if ($('launcherRecommendedCount')) $('launcherRecommendedCount').textContent = `${recommendedEntries.length} 个`;
       if ($('launcherPinnedCount')) $('launcherPinnedCount').textContent = `${pinnedEntries.length} 个`;
-      if ($('launcherDisabledCount')) $('launcherDisabledCount').textContent = `${disabledEntries.length} 个`;
+      if ($('launcherDisabledCount')) $('launcherDisabledCount').textContent = '0 个';
 
       recentHost.innerHTML = recentEntries.map(entry => renderLauncherEntryCard(entry, { compact:true })).join('') || '<div class="list-empty-state text-sm text-calm-mute">还没有最近使用记录，先从右侧目录进入一个功能。</div>';
       recommendedHost.innerHTML = recommendedEntries.map(entry => {
@@ -315,7 +310,7 @@
       }).join('') || '<div class="list-empty-state text-sm text-calm-mute">今天没有特别突出的入口，你可以从目录继续推进最重要的模块。</div>';
       if ($('launcherPinnedList')) $('launcherPinnedList').innerHTML = pinnedEntries.map(entry => renderLauncherEntryCard(entry, { compact:true })).join('') || '<div class="list-empty-state text-sm text-calm-mute">把常用模块置顶后，这里会形成你的固定入口带。</div>';
       directoryHost.innerHTML = directoryEntries.map(entry => renderLauncherEntryCard(entry)).join('');
-      if ($('launcherDisabledList')) $('launcherDisabledList').innerHTML = disabledEntries.map(entry => renderLauncherEntryCard(entry, { compact:true })).join('') || '<div class="list-empty-state text-sm text-calm-mute">当前所有目录项都已启用。</div>';
+      if ($('launcherDisabledList')) $('launcherDisabledList').innerHTML = '<div class="list-empty-state text-sm text-calm-mute">隐藏模块只在设置的模块中心重新开启。</div>';
       bindLauncherActions(document);
     }
 
@@ -401,20 +396,25 @@
           target: 'mentor-section'
         });
       }
-      const recoveryGap = recentDates(3).every(day => !careCountOn(day) && todayHabitCompletion(day) < 40);
-      if (recoveryGap) {
+      const careEnabled = isModuleEnabled('care');
+      const wellbeingEnabled = isModuleEnabled('wellbeing');
+      const recoveryGap = recentDates(3).every(day => (!careEnabled || !careCountOn(day)) && (!wellbeingEnabled || todayHabitCompletion(day) < 40));
+      if ((careEnabled || wellbeingEnabled) && recoveryGap) {
         items.push({
           tone: 'mint',
           title: '连续 3 天恢复动作偏少',
-          detail: '建议先到“身心恢复”补一条关怀或恢复动作。',
-          target: 'care-section'
+          detail: careEnabled ? '建议先补一条心灵关怀记录。' : '建议先补一个习惯或恢复动作。',
+          target: careEnabled ? 'care-section' : 'wellbeing-section'
         });
-      } else if (!careCountOn(date) || todayHabitCompletion(date) < 40) {
+      } else if ((careEnabled && !careCountOn(date)) || (wellbeingEnabled && todayHabitCompletion(date) < 40)) {
         items.push({
           tone: 'mint',
           title: '今天的恢复记录还不完整',
-          detail: `关怀 ${careCountOn(date) ? '已写' : '未写'} · 习惯完成 ${todayHabitCompletion(date)}%`,
-          target: 'care-section'
+          detail: [
+            careEnabled ? `关怀 ${careCountOn(date) ? '已写' : '未写'}` : null,
+            wellbeingEnabled ? `习惯完成 ${todayHabitCompletion(date)}%` : null
+          ].filter(Boolean).join(' · '),
+          target: careEnabled && !careCountOn(date) ? 'care-section' : 'wellbeing-section'
         });
       }
       return items.slice(0, 5);
@@ -568,7 +568,8 @@
       if (!$('supportOverviewList')) return;
       const today = todayStr();
       const review = dailyReviewEntryOn(today);
-      const care = careEntryOn(today);
+      const careEnabled = isModuleEnabled('care');
+      const care = careEnabled ? careEntryOn(today) : null;
       const mentorPending = isModuleEnabled('mentor') ? mentorPendingItems(today) : [];
       const guidanceLabel = workspaceCopy().guidanceLabel;
       const items = [];
@@ -584,18 +585,18 @@
           target: 'review-section'
         }));
       }
-      if (!careCountOn(today)) {
+      if (careEnabled && !careCountOn(today)) {
         items.push({ title: '今天还没有心灵关怀记录', detail: '先补压力、能量和一个恢复动作。', target: 'care-section' });
-      } else if (care.stress >= 4) {
+      } else if (careEnabled && care.stress >= 4) {
         items.push({ title: `今天压力偏高：${care.stress}/5`, detail: '建议先做恢复动作，再安排高负荷推进。', target: 'care-section' });
       }
       if ($('supportOverviewBadge')) $('supportOverviewBadge').textContent = `${items.length} 条`;
       if ($('supportOverviewStats')) $('supportOverviewStats').innerHTML = [
         { label: `待跟进${guidanceLabel}`, value: isModuleEnabled('mentor') ? mentorPending.length : '已隐藏', color: 'text-dopamine-purple' },
         { label: '今日明日优先', value: isModuleEnabled('review') ? reviewPriorityCount(review) : '已隐藏', color: 'text-dopamine-pink' },
-        { label: '今日关怀记录', value: careCountOn(today) ? '已写' : '未写', color: 'text-dopamine-mint' },
+        careEnabled ? { label: '今日关怀记录', value: careCountOn(today) ? '已写' : '未写', color: 'text-dopamine-mint' } : null,
         { label: '等待反馈状态', value: isModuleEnabled('mentor') ? Object.values(state.mentor?.entries || {}).filter(entry => entry.status === 'waiting').length : '已隐藏', color: 'text-dopamine-sky' }
-      ].map(item => `
+      ].filter(Boolean).map(item => `
         <div class="small-stat p-4">
           <div class="text-sm text-calm-mute">${item.label}</div>
           <div class="text-2xl font-black mt-1 ${item.color}">${escapeHtml(String(item.value))}</div>
@@ -619,7 +620,7 @@
       const focusMins = range.dates.reduce((sum, d) => sum + focusMinutesOn(d), 0);
       const workMins = range.dates.reduce((sum, d) => sum + totalAttendanceMinutes(d), 0);
       const avgHabit = Math.round(range.dates.reduce((sum, d) => sum + todayHabitCompletion(d), 0) / days);
-      const careEntries = range.dates.reduce((sum, d) => sum + careCountOn(d), 0);
+      const careEntries = isModuleEnabled('care') ? range.dates.reduce((sum, d) => sum + careCountOn(d), 0) : 0;
       const mentorEntries = range.dates.reduce((sum, d) => sum + mentorCountOn(d), 0);
       const reviewEntries = range.dates.reduce((sum, d) => sum + reviewCountOn(d), 0);
       const doneTasks = state.tasks.filter(t => t.doneAt && isDateInRange(dateFromDateTime(t.doneAt), range.start, range.end)).length;
@@ -628,7 +629,7 @@
         { label:`${statsModeText()}专注`, value: formatMinutes(focusMins), color:'text-dopamine-orange' },
         { label:`${statsModeText()}打卡`, value: formatMinutes(workMins), color:'text-dopamine-sky' },
         { label:`${statsModeText()}习惯均值`, value: `${avgHabit}%`, color:'text-dopamine-mint' },
-        { label:`${statsModeText()}心灵关怀`, value: careEntries, color:'text-dopamine-mint' },
+        isModuleEnabled('care') ? { label:`${statsModeText()}心灵关怀`, value: careEntries, color:'text-dopamine-mint' } : null,
         isModuleEnabled('mentor') ? { label:`${statsModeText()}${workspaceCopy().guidanceLabel}`, value: mentorEntries, color:'text-dopamine-purple' } : null,
         isModuleEnabled('review') ? { label:`${statsModeText()}复盘`, value: reviewEntries, color:'text-dopamine-pink' } : null,
         { label:`${statsModeText()}完成任务`, value: doneTasks, color:'text-dopamine-purple' },

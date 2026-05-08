@@ -90,6 +90,11 @@ function normalizeHttpResult(input = {}) {
     : typeof input.data === "string"
       ? input.data
       : JSON.stringify(input.data ?? "");
+  const bodyBase64 = typeof input.bodyBase64 === "string"
+    ? input.bodyBase64
+    : typeof input.dataBase64 === "string"
+      ? input.dataBase64
+      : "";
   const headers = normalizeHeaders(input.headers);
   const etag = input.etag || headerValue(headers, "etag") || "";
   const lastModified = input.lastModified || headerValue(headers, "last-modified") || "";
@@ -97,11 +102,29 @@ function normalizeHttpResult(input = {}) {
   return {
     status: Number(input.status) || 0,
     body,
+    bodyBase64,
     headers,
     etag,
     lastModified,
     size,
   };
+}
+
+function base64ToBytes(base64 = "") {
+  const binary = atob(String(base64 || ""));
+  const bytes = new Uint8Array(binary.length);
+  for (let i = 0; i < binary.length; i += 1) bytes[i] = binary.charCodeAt(i);
+  return bytes;
+}
+
+function bytesToBase64(bytesLike) {
+  const bytes = bytesLike instanceof Uint8Array ? bytesLike : new Uint8Array(bytesLike || new ArrayBuffer(0));
+  let binary = "";
+  const chunkSize = 0x8000;
+  for (let i = 0; i < bytes.length; i += chunkSize) {
+    binary += String.fromCharCode.apply(null, bytes.subarray(i, i + chunkSize));
+  }
+  return btoa(binary);
 }
 
 async function invokeTauriMaybe(command, args = {}) {
@@ -300,6 +323,37 @@ export async function httpRequest(method, url, { headers = {}, body } = {}) {
     });
   }
   const res = await invokeTauriMaybe("sync_http_request", { request: { method, url, headers, body } });
+  return normalizeHttpResult(res);
+}
+
+export async function httpRequestBinary(method, url, { headers = {}, bodyBase64 = null } = {}) {
+  if (hasCapacitorNativeHttp()) {
+    const res = await window.Capacitor.nativePromise("WebDavHttp", "request", {
+      url,
+      method,
+      headers,
+      dataBase64: bodyBase64,
+      responseType: "base64",
+      connectTimeout: 20000,
+      readTimeout: 30000,
+    });
+    return normalizeHttpResult(res);
+  }
+  if (!hasTauriRuntime()) {
+    const res = await fetch(url, {
+      method,
+      headers,
+      body: bodyBase64 ? base64ToBytes(bodyBase64) : undefined,
+    });
+    return normalizeHttpResult({
+      status: res.status,
+      bodyBase64: bytesToBase64(await res.arrayBuffer()),
+      headers: res.headers,
+    });
+  }
+  const res = await invokeTauriMaybe("sync_http_request", {
+    request: { method, url, headers, bodyBase64, responseBase64: true },
+  });
   return normalizeHttpResult(res);
 }
 

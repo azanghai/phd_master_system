@@ -12,6 +12,7 @@ import java.util.Locale;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.TimeUnit;
+import android.util.Base64;
 import okhttp3.Headers;
 import okhttp3.MediaType;
 import okhttp3.OkHttpClient;
@@ -40,6 +41,8 @@ public class WebDavHttpPlugin extends Plugin {
         String method = call.getString("method", "GET").toUpperCase(Locale.ROOT);
         JSObject headers = call.getObject("headers", new JSObject());
         String data = call.getString("data");
+        String dataBase64 = call.getString("dataBase64");
+        String responseType = call.getString("responseType", "text");
         Integer connectTimeout = call.getInt("connectTimeout", 20000);
         Integer readTimeout = call.getInt("readTimeout", 30000);
 
@@ -57,7 +60,10 @@ public class WebDavHttpPlugin extends Plugin {
         }
 
         RequestBody requestBody = null;
-        if (data != null) {
+        if (dataBase64 != null) {
+            String contentType = headers.getString("Content-Type", headers.getString("content-type", "application/octet-stream"));
+            requestBody = RequestBody.create(MediaType.parse(contentType), Base64.decode(dataBase64, Base64.DEFAULT));
+        } else if (data != null) {
             String contentType = headers.getString("Content-Type", headers.getString("content-type", "application/octet-stream"));
             requestBody = RequestBody.create(MediaType.parse(contentType), data);
         }
@@ -70,17 +76,25 @@ public class WebDavHttpPlugin extends Plugin {
         try (Response response = client.newCall(request.build()).execute()) {
             ResponseBody responseBody = response.body();
             Headers responseHeaders = response.headers();
-            String body = responseBody != null ? responseBody.string() : "";
+            byte[] bodyBytes = responseBody != null ? responseBody.bytes() : new byte[0];
+            String body = "base64".equalsIgnoreCase(responseType)
+                ? ""
+                : new String(bodyBytes);
+            String bodyBase64 = "base64".equalsIgnoreCase(responseType)
+                ? Base64.encodeToString(bodyBytes, Base64.NO_WRAP)
+                : "";
             String etag = firstHeader(responseHeaders, "ETag");
             String lastModified = firstHeader(responseHeaders, "Last-Modified");
             Long size = parseLong(firstHeader(responseHeaders, "Content-Length"));
-            if (size == null) size = (long) body.getBytes().length;
+            if (size == null) size = (long) bodyBytes.length;
             JSObject result = new JSObject();
             result.put("status", response.code());
             result.put("url", response.request().url().toString());
             result.put("headers", toJSObject(responseHeaders));
             result.put("body", body);
             result.put("data", body);
+            result.put("bodyBase64", bodyBase64);
+            result.put("dataBase64", bodyBase64);
             result.put("etag", etag != null ? etag : "");
             result.put("lastModified", lastModified != null ? lastModified : "");
             result.put("size", size);

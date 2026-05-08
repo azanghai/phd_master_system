@@ -136,12 +136,7 @@
         else setStatsMode('day');
       };
 
-      $('btnExportJson').onclick = exportJson;
-      $('btnCopyJson').onclick = copyJson;
-      $('btnImportJsonText').onclick = () => importJsonText($('jsonEditor').value);
-      $('btnRefreshJsonPreview').onclick = refreshSettings;
       $('btnClearAllData').onclick = clearAllData;
-      $('importFile').onchange = async (e) => { const file = e.target.files?.[0]; if (!file) return; importJsonText(await file.text()); e.target.value=''; };
 
       $('btnCloseEditDialog').onclick = closeEditDialog;
       $('btnSaveRecord').onclick = () => { if (editContext?.onSave) editContext.onSave(collectEditValues()); closeEditDialog(); };
@@ -162,6 +157,7 @@
         window.PhdWorkbenchSyncAdapter._syncDirty = false;
         window.PhdWorkbenchSyncAdapter._suppressLocalChange = false;
         renderAll();
+        setTimeout(() => migrateLegacyAttachmentsInState({ render: true }), 0);
       },
       applyState: (next, meta={}) => window.PhdWorkbenchSyncAdapter.replaceStateFromSync(next, meta),
       setStorageSyncState: (text) => { storageMeta.syncState = text || storageMeta.syncState; if (isSectionVisible('settings-section')) refreshSettings(); },
@@ -178,6 +174,6 @@
     loadPrefs();
     navTo(currentSection);
     syncResponsiveLayout();
-    hydrateStateFromJson();
+    hydrateStateFromJson().finally(() => migrateLegacyAttachmentsInState({ render: true }));
     updateClock();
     setInterval(updateClock, 1000);

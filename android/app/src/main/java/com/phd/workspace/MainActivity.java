@@ -7,6 +7,7 @@ public class MainActivity extends BridgeActivity {
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         registerPlugin(WebDavHttpPlugin.class);
+        registerPlugin(AttachmentStorePlugin.class);
         super.onCreate(savedInstanceState);
     }
 }
