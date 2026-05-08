@@ -57,7 +57,7 @@
           careDailyForm: '今日恢复记录',
           mentorMain: copy.guidanceLabel,
           mentorDailyForm: copy.guidanceLabel,
-          achievement: '里程碑墙',
+          achievement: '成就殿堂',
           thesis: copy.thesisLabel,
           submission: '投稿管线',
           review: '复盘与明日计划',
