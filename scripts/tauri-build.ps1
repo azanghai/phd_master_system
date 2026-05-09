@@ -5,5 +5,5 @@ if ((Test-Path $cargoBin) -and ($env:Path -notlike "*$cargoBin*")) {
   $env:Path = "$cargoBin;$env:Path"
 }
 
-& npx.cmd tauri build --bundles nsis
+& npx.cmd tauri build --bundles nsis,msi
 exit $LASTEXITCODE
