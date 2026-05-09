@@ -10,6 +10,7 @@
     "cap:sync:android": "npm run prepare:static && npx cap sync android",
     "cap:open:android": "npx cap open android",
     "android:debug": "cd android && gradlew.bat assembleDebug",
+    "html:dev": "node ./scripts/html-sync-server.mjs",
     "tauri:dev": "powershell -ExecutionPolicy Bypass -File ./scripts/tauri-dev.ps1",
     "tauri:build": "powershell -ExecutionPolicy Bypass -File ./scripts/tauri-build.ps1",
     "desktop:build": "node ./scripts/desktop-build.mjs",

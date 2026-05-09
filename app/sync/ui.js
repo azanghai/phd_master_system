@@ -3,6 +3,8 @@ import { JianguoyunWebDavProvider } from "./providers/jianguoyun-webdav.js";
 import { FIRST_SYNC_MODE } from "./types.js";
 import { readSyncConfig, secrets, writeSyncConfig } from "./state.js";
 
+window.PhdWorkbenchSyncUiLoaded = true;
+
 let config = null;
 let syncing = false;
 let autoTimer = null;

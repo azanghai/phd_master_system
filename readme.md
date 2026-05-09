@@ -16,6 +16,7 @@
 ```bash
 npm run prepare:static
 npm run build
+npm run html:dev
 npm run tauri:dev
 npm run tauri:build
 npm run cap:sync:android
@@ -25,6 +26,7 @@ npm run cap:sync:android
 
 - `npm run prepare:static`：生成静态入口、构建 Tailwind CSS，并复制本地 Chart.js / Font Awesome 资源。
 - `npm run build`：执行静态资源准备流程。
+- `npm run html:dev`：启动 HTML 版本地入口，并为坚果云 WebDAV 同步提供本地代理。
 - `npm run tauri:dev`：启动 Tauri 桌面端开发环境。
 - `npm run tauri:build`：构建 Tauri 桌面端应用。
 - `npm run cap:sync:android`：同步 Web 资源到 Android 工程。

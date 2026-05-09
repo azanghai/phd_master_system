@@ -7729,6 +7729,25 @@
     updateClock();
     setInterval(updateClock, 1000);
   </script>
+  <script>
+    window.addEventListener('DOMContentLoaded', () => {
+      setTimeout(() => {
+        if (window.PhdWorkbenchSyncUiLoaded || window.__TAURI__?.core?.invoke || window.__TAURI_INTERNALS__?.invoke) return;
+        const message = location.protocol === 'file:'
+          ? 'HTML 版直接双击打开时无法连接坚果云；请用 npm run html:dev 启动后再同步。'
+          : '云同步模块未加载，请检查 ./sync/ui.js 是否可访问。';
+        ['cloudSyncStatus', 'cloudLastSyncResult'].forEach(id => {
+          const el = document.getElementById(id);
+          if (el) el.textContent = message;
+        });
+        ['btnJianguoyunTest', 'btnJianguoyunSave', 'btnCloudSyncNow', 'btnCloudUpload', 'btnCloudDownload'].forEach(id => {
+          const btn = document.getElementById(id);
+          if (!btn) return;
+          btn.onclick = () => alert(message);
+        });
+      }, 1500);
+    });
+  </script>
   <script type="module" src="./sync/ui.js"></script>
 </body>
 </html>

@@ -17,6 +17,16 @@ function hasCapacitorNativeHttp() {
   return !!(window.Capacitor?.isNativePlatform?.() && window.Capacitor?.nativePromise);
 }
 
+function syncProxyUrl() {
+  const value = String(window.PHD_WORKBENCH_SYNC_PROXY_URL || "").trim();
+  if (!value) return "";
+  try {
+    return new URL(value, window.location.href).toString();
+  } catch {
+    return "";
+  }
+}
+
 function needsWebDavNativeHttp(method) {
   return !["OPTIONS", "GET", "HEAD", "POST", "PUT", "DELETE", "TRACE", "PATCH"].includes(String(method || "GET").toUpperCase());
 }
@@ -315,7 +325,23 @@ export async function httpRequest(method, url, { headers = {}, body } = {}) {
     return normalizeHttpResult(res);
   }
   if (!hasTauriRuntime()) {
-    const res = await fetch(url, { method, headers, body });
+    const proxy = syncProxyUrl();
+    if (proxy) {
+      const res = await fetch(proxy, {
+        method: "POST",
+        headers: { "Content-Type": "application/json; charset=utf-8" },
+        body: JSON.stringify({ method, url, headers, body }),
+      });
+      const data = await res.json().catch(() => ({}));
+      if (!res.ok) throw new Error(data?.error || `本地同步代理请求失败（${res.status}）`);
+      return normalizeHttpResult(data);
+    }
+    let res;
+    try {
+      res = await fetch(url, { method, headers, body });
+    } catch (err) {
+      throw new Error(`浏览器无法直接访问坚果云 WebDAV：${err?.message || err}。请用 npm run html:dev 打开 HTML 版，或使用桌面版。`);
+    }
     return normalizeHttpResult({
       status: res.status,
       body: await res.text(),
@@ -340,11 +366,27 @@ export async function httpRequestBinary(method, url, { headers = {}, bodyBase64 
     return normalizeHttpResult(res);
   }
   if (!hasTauriRuntime()) {
-    const res = await fetch(url, {
-      method,
-      headers,
-      body: bodyBase64 ? base64ToBytes(bodyBase64) : undefined,
-    });
+    const proxy = syncProxyUrl();
+    if (proxy) {
+      const res = await fetch(proxy, {
+        method: "POST",
+        headers: { "Content-Type": "application/json; charset=utf-8" },
+        body: JSON.stringify({ method, url, headers, bodyBase64, responseBase64: true }),
+      });
+      const data = await res.json().catch(() => ({}));
+      if (!res.ok) throw new Error(data?.error || `本地同步代理请求失败（${res.status}）`);
+      return normalizeHttpResult(data);
+    }
+    let res;
+    try {
+      res = await fetch(url, {
+        method,
+        headers,
+        body: bodyBase64 ? base64ToBytes(bodyBase64) : undefined,
+      });
+    } catch (err) {
+      throw new Error(`浏览器无法直接访问坚果云 WebDAV：${err?.message || err}。请用 npm run html:dev 打开 HTML 版，或使用桌面版。`);
+    }
     return normalizeHttpResult({
       status: res.status,
       bodyBase64: bytesToBase64(await res.arrayBuffer()),
