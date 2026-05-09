@@ -1,6 +1,6 @@
 {
   "$schema": "../node_modules/@tauri-apps/cli/config.schema.json",
-  "productName": "博士工作台",
+  "productName": "学术工作台",
   "version": "0.2.0",
   "identifier": "com.codex.phd-workbench",
   "build": {
@@ -11,7 +11,7 @@
   "app": {
     "windows": [
       {
-        "title": "博士工作台",
+        "title": "学术工作台",
         "width": 1440,
         "height": 960,
         "minWidth": 1100,
