@@ -53,11 +53,16 @@ jobs:
         id: package
         run: node -e "const pkg=require('./package.json'); console.log('version=' + pkg.version)" >> "$GITHUB_OUTPUT"
 
+      - name: Collect release asset
+        run: |
+          mkdir -p release-assets
+          cp android/app/build/outputs/apk/debug/*.apk "release-assets/PhD-Workbench-${{ steps.package.outputs.version }}-android-debug.apk"
+
       - name: Upload APK artifact
         uses: actions/upload-artifact@v4
         with:
-          name: 博士工作台-${{ steps.package.outputs.version }}-android-debug-apk
-          path: android/app/build/outputs/apk/debug/*.apk
+          name: PhD-Workbench-${{ steps.package.outputs.version }}-android-debug-apk
+          path: release-assets/*
           if-no-files-found: error
 
       - name: Publish APK to GitHub Release
@@ -66,7 +71,8 @@ jobs:
           GH_TOKEN: ${{ github.token }}
         run: |
           if ! gh release view "$GITHUB_REF_NAME" >/dev/null 2>&1; then
-            gh release create "$GITHUB_REF_NAME" --title "$GITHUB_REF_NAME" --notes "Automated desktop and Android build artifacts." || gh release view "$GITHUB_REF_NAME" >/dev/null
+            gh release create "$GITHUB_REF_NAME" --title "PhD Workbench $GITHUB_REF_NAME" --notes "Automated desktop and Android build artifacts." || gh release view "$GITHUB_REF_NAME" >/dev/null
           fi
+          gh release edit "$GITHUB_REF_NAME" --title "PhD Workbench $GITHUB_REF_NAME" --notes "Automated desktop and Android build artifacts."
 
-          gh release upload "$GITHUB_REF_NAME" android/app/build/outputs/apk/debug/*.apk --clobber
+          gh release upload "$GITHUB_REF_NAME" release-assets/* --clobber

@@ -1,7 +1,7 @@
 {
   "$schema": "../node_modules/@tauri-apps/cli/config.schema.json",
-  "productName": "学术工作台",
-  "version": "0.2.0",
+  "productName": "PhD Workbench",
+  "version": "0.2.3",
   "identifier": "com.codex.phd-workbench",
   "build": {
     "frontendDist": "../app",
@@ -11,7 +11,7 @@
   "app": {
     "windows": [
       {
-        "title": "学术工作台",
+        "title": "PhD Workbench",
         "width": 1440,
         "height": 960,
         "minWidth": 1100,
@@ -30,7 +30,7 @@
     "targets": "all",
     "windows": {
       "wix": {
-        "language": "zh-CN"
+        "language": "en-US"
       }
     },
     "icon": [

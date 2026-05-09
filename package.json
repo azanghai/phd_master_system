@@ -2,7 +2,7 @@
   "name": "phd-workbench-desktop",
   "version": "0.2.3",
   "private": true,
-  "description": "学术工作台 Tauri v2 desktop wrapper",
+  "description": "PhD Workbench Tauri v2 desktop wrapper",
   "scripts": {
     "prepare:static": "node ./scripts/prepare-static.mjs && npm run build:css && node ./scripts/copy-vendor.mjs",
     "build": "npm run prepare:static",

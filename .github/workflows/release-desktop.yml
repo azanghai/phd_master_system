@@ -19,23 +19,16 @@ jobs:
         include:
           - platform: windows
             os: windows-latest
+            arch: x64
             build-script: desktop:build:win
-            artifact-glob: |
-              src-tauri/target/release/bundle/nsis/*.exe
-              src-tauri/target/release/bundle/msi/*.msi
           - platform: macos
             os: macos-latest
+            arch: aarch64
             build-script: desktop:build:mac
-            artifact-glob: |
-              src-tauri/target/release/bundle/dmg/*.dmg
-              src-tauri/target/release/bundle/macos/*.app
           - platform: linux
             os: ubuntu-22.04
+            arch: x64
             build-script: desktop:build:linux
-            artifact-glob: |
-              src-tauri/target/release/bundle/deb/*.deb
-              src-tauri/target/release/bundle/rpm/*.rpm
-              src-tauri/target/release/bundle/appimage/*.AppImage
 
     steps:
       - name: Checkout repository
@@ -67,11 +60,41 @@ jobs:
         shell: bash
         run: node -e "const pkg=require('./package.json'); console.log('version=' + pkg.version)" >> "$GITHUB_OUTPUT"
 
+      - name: Collect release assets
+        shell: bash
+        run: |
+          set -euo pipefail
+          mkdir -p release-assets
+
+          version="${{ steps.package.outputs.version }}"
+          platform="${{ matrix.platform }}"
+          arch="${{ matrix.arch }}"
+
+          while IFS= read -r -d '' file; do
+            filename="$(basename "$file")"
+            kind=""
+            extension="${filename##*.}"
+
+            case "$filename" in
+              *.exe) kind="setup"; extension="exe" ;;
+              *.msi) kind="msi"; extension="msi" ;;
+              *.dmg) kind="dmg"; extension="dmg" ;;
+              *.deb) kind="deb"; extension="deb" ;;
+              *.rpm) kind="rpm"; extension="rpm" ;;
+              *.AppImage) kind="appimage"; extension="AppImage" ;;
+              *) continue ;;
+            esac
+
+            cp "$file" "release-assets/PhD-Workbench-${version}-${platform}-${arch}-${kind}.${extension}"
+          done < <(find src-tauri/target/release/bundle -type f \( -name "*.exe" -o -name "*.msi" -o -name "*.dmg" -o -name "*.deb" -o -name "*.rpm" -o -name "*.AppImage" \) -print0)
+
+          ls -la release-assets
+
       - name: Upload desktop artifacts
         uses: actions/upload-artifact@v4
         with:
-          name: 博士工作台-${{ steps.package.outputs.version }}-${{ matrix.platform }}-x64
-          path: ${{ matrix.artifact-glob }}
+          name: PhD-Workbench-${{ steps.package.outputs.version }}-${{ matrix.platform }}-${{ matrix.arch }}
+          path: release-assets/*
           if-no-files-found: error
 
       - name: Publish desktop bundles to GitHub Release
@@ -81,17 +104,8 @@ jobs:
           GH_TOKEN: ${{ github.token }}
         run: |
           if ! gh release view "$GITHUB_REF_NAME" >/dev/null 2>&1; then
-            gh release create "$GITHUB_REF_NAME" --title "$GITHUB_REF_NAME" --notes "Automated desktop and Android build artifacts." || gh release view "$GITHUB_REF_NAME" >/dev/null
+            gh release create "$GITHUB_REF_NAME" --title "PhD Workbench $GITHUB_REF_NAME" --notes "Automated desktop and Android build artifacts." || gh release view "$GITHUB_REF_NAME" >/dev/null
           fi
+          gh release edit "$GITHUB_REF_NAME" --title "PhD Workbench $GITHUB_REF_NAME" --notes "Automated desktop and Android build artifacts."
 
-          files=()
-          while IFS= read -r -d '' file; do
-            files+=("$file")
-          done < <(find src-tauri/target/release/bundle -type f \( -name "*.exe" -o -name "*.msi" -o -name "*.dmg" -o -name "*.deb" -o -name "*.rpm" -o -name "*.AppImage" \) -print0)
-
-          if [ ${#files[@]} -eq 0 ]; then
-            echo "No release files found"
-            exit 1
-          fi
-
-          gh release upload "$GITHUB_REF_NAME" "${files[@]}" --clobber
+          gh release upload "$GITHUB_REF_NAME" release-assets/* --clobber

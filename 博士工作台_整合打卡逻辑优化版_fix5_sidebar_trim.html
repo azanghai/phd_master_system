@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>学术工作台</title>
+  <title>PhD Workbench</title>
   <script src="https://cdn.tailwindcss.com"></script>
   <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.8/dist/chart.umd.min.js"></script>
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.2/css/all.min.css">
@@ -1301,7 +1301,7 @@
       <div class="cockpit-brand mb-4">
         <div class="cockpit-mark"><i class="fa-solid fa-compass-drafting"></i></div>
         <div class="min-w-0">
-          <div id="appBrandName" class="font-black text-base leading-tight">学术工作台</div>
+          <div id="appBrandName" class="font-black text-base leading-tight">PhD Workbench</div>
           <div id="appBrandSubtitle" class="text-xs text-calm-mute mt-1">Research Cockpit</div>
         </div>
       </div>
@@ -3045,7 +3045,7 @@
       const titleEl = $('mobileNavSectionTitle');
       if (!titleEl) return;
       const activeBtn = document.querySelector('.nav-btn.active span');
-      titleEl.textContent = activeBtn ? activeBtn.textContent.trim() : '博士工作台';
+      titleEl.textContent = activeBtn ? activeBtn.textContent.trim() : 'PhD Workbench';
     }
     function openMobileDrawer() {
       if (!isMobileViewport()) return;
