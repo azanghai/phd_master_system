@@ -31,6 +31,12 @@ npm run cap:sync:android
 - `npm run tauri:build`：构建 Tauri 桌面端应用。
 - `npm run cap:sync:android`：同步 Web 资源到 Android 工程。
 
+## macOS 打包说明
+
+macOS 下载版如果未签名，可能会被系统提示“应用已损坏，无法打开”。`npm run desktop:build:mac` 在没有配置 Apple 证书时会自动使用 ad-hoc 签名，适合内部测试；正式对外分发仍建议配置 Apple Developer ID 证书并完成公证。
+
+GitHub Actions 的桌面发布流程已预留以下 secrets：`APPLE_CERTIFICATE`、`APPLE_CERTIFICATE_PASSWORD`、`APPLE_SIGNING_IDENTITY`、`APPLE_ID`、`APPLE_PASSWORD`、`APPLE_TEAM_ID`。配置后重新发布 tag，macOS 产物会使用正式签名/公证流程。
+
 ## 数据与同步
 
 工作台数据保存在本地，并可在 `设置` 中导出 JSON 备份。桌面端会使用 `workspace-data.json` 作为数据文件。需要多设备同步时，可以在 `设置` 中配置坚果云 WebDAV。

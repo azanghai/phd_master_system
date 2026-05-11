@@ -27,12 +27,39 @@ if (!platform) {
 
 const npxBin = process.platform === "win32" ? "npx.cmd" : "npx";
 const args = ["tauri", "build", "--bundles", targetBundles[platform]];
+const env = { ...process.env };
+const appleEnvKeys = [
+  "APPLE_CERTIFICATE",
+  "APPLE_CERTIFICATE_PASSWORD",
+  "APPLE_SIGNING_IDENTITY",
+  "APPLE_ID",
+  "APPLE_PASSWORD",
+  "APPLE_TEAM_ID"
+];
+
+for (const key of appleEnvKeys) {
+  if (typeof env[key] === "string" && env[key].trim().length === 0) {
+    delete env[key];
+  }
+}
+
+if (platform === "mac") {
+  const hasAppleSigningEnv = ["APPLE_CERTIFICATE", "APPLE_SIGNING_IDENTITY"].some(
+    (key) => typeof env[key] === "string" && env[key].trim().length > 0
+  );
+
+  if (!hasAppleSigningEnv) {
+    env.APPLE_SIGNING_IDENTITY = "-";
+    console.log("No Apple signing certificate configured; using ad-hoc macOS code signing.");
+  }
+}
 
 console.log(`Building ${platform} desktop bundles: ${targetBundles[platform]}`);
 
 const result = spawnSync(npxBin, args, {
   stdio: "inherit",
-  shell: process.platform === "win32"
+  shell: process.platform === "win32",
+  env
 });
 
 if (result.error) {
