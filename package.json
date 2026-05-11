@@ -1,6 +1,6 @@
 {
   "name": "phd-workbench-desktop",
-  "version": "0.2.3",
+  "version": "0.2.7",
   "private": true,
   "description": "PhD Workbench Tauri v2 desktop wrapper",
   "scripts": {

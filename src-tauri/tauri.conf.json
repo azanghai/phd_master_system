@@ -1,7 +1,7 @@
 {
   "$schema": "../node_modules/@tauri-apps/cli/config.schema.json",
   "productName": "PhD Workbench",
-  "version": "0.2.3",
+  "version": "0.2.7",
   "identifier": "com.codex.phd-workbench",
   "build": {
     "frontendDist": "../app",
