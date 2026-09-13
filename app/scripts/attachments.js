@@ -152,10 +152,21 @@
         });
       }
 
-      async function saveLocalAttachmentBase64(storageKey, dataBase64) {
+      async function saveLocalAttachmentBase64(storageKey, dataBase64, metadata = {}) {
         if (!validStorageKey(storageKey)) throw new Error(`附件存储键不安全: ${storageKey}`);
         if (hasTauriRuntime()) return await invokeTauri('save_attachment_file', { storageKey, dataBase64 });
         if (hasCapacitorNative()) return await invokeAttachmentStore('save', { storageKey, dataBase64 });
+        if (window.PhdWorkbenchServer?.enabled) {
+          const binary = atob(String(dataBase64 || ''));
+          const bytes = Uint8Array.from(binary, (char) => char.charCodeAt(0));
+          const form = new FormData();
+          form.append('storageKey', storageKey);
+          form.append('file', new Blob([bytes], { type: metadata.type || 'application/octet-stream' }), sanitizeName(metadata.name || storageKey));
+          const response = await fetch('/api/attachments', { method: 'POST', credentials: 'same-origin', body: form });
+          const result = await response.json().catch(() => ({}));
+          if (!response.ok) throw new Error(result?.error?.message || '附件上传失败');
+          return result.attachment;
+        }
         try {
           await idbSet(storageKey, dataBase64);
         } catch {
@@ -174,6 +185,13 @@
           const result = await invokeAttachmentStore('read', { storageKey });
           return result?.dataBase64 || null;
         }
+        if (window.PhdWorkbenchServer?.enabled) {
+          const response = await fetch(`/api/attachments/key/${encodeURIComponent(storageKey)}`, { credentials: 'same-origin' });
+          if (response.status === 404) return null;
+          const result = await response.json().catch(() => ({}));
+          if (!response.ok) throw new Error(result?.error?.message || '附件读取失败');
+          return result.dataBase64 || null;
+        }
         return await idbGet(storageKey) || localStorage.getItem(`${STORAGE_PREFIX}${storageKey}`);
       }
 
@@ -187,12 +205,18 @@
           const result = await invokeAttachmentStore('exists', { storageKey });
           return !!result?.exists;
         }
+        if (window.PhdWorkbenchServer?.enabled) return !!(await readLocalAttachmentBase64(storageKey));
         return !!(await idbGet(storageKey) || localStorage.getItem(`${STORAGE_PREFIX}${storageKey}`));
       }
 
       async function clearLocalAttachments() {
         if (hasTauriRuntime()) return await invokeTauri('clear_attachment_files');
         if (hasCapacitorNative()) return await invokeAttachmentStore('clear');
+        if (window.PhdWorkbenchServer?.enabled) {
+          const response = await fetch('/api/attachments', { method: 'DELETE', credentials: 'same-origin' });
+          if (!response.ok) throw new Error('服务端附件清理失败');
+          return;
+        }
         await idbDeleteAll().catch(() => {});
         Object.keys(localStorage).filter((key) => key.startsWith(STORAGE_PREFIX)).forEach((key) => localStorage.removeItem(key));
       }
@@ -202,7 +226,7 @@
         const sha256 = await sha256Hex(buffer);
         const storageKey = storageKeyFrom(sha256, file.name, file.type);
         const dataBase64 = arrayBufferToBase64(buffer);
-        await saveLocalAttachmentBase64(storageKey, dataBase64);
+        await saveLocalAttachmentBase64(storageKey, dataBase64, { name: file.name, type: file.type });
         return normalizeRef({
           id: typeof uid === 'function' ? uid('rf') : `rf_${Date.now()}`,
           name: file.name,
@@ -222,7 +246,7 @@
         const name = sanitizeName(item.name || item.filename || '文件');
         const type = String(item.type || parsed.type || '');
         const storageKey = storageKeyFrom(sha256, name, type);
-        await saveLocalAttachmentBase64(storageKey, parsed.base64);
+        await saveLocalAttachmentBase64(storageKey, parsed.base64, { name, type });
         return normalizeRef({
           id: item.id || (typeof uid === 'function' ? uid('rf') : `rf_${Date.now()}`),
           name,

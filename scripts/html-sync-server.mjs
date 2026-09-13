@@ -8,7 +8,7 @@ const __dirname = path.dirname(__filename);
 const rootDir = path.resolve(__dirname, "..");
 const host = process.env.PHD_WORKBENCH_HTML_HOST || "127.0.0.1";
 const port = Number(process.env.PHD_WORKBENCH_HTML_PORT || 47637);
-const entryFile = "博士工作台_整合打卡逻辑优化版_fix5_sidebar_trim.html";
+const entryFile = process.env.PHD_WORKBENCH_HTML_ENTRY || "博士工作台_整合打卡逻辑优化版_fix5_sidebar_trim.html";
 const proxyPath = "/__sync_proxy__/request";
 
 const mimeTypes = {

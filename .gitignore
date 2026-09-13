@@ -5,4 +5,7 @@ android/build/
 android/app/build/
 android/app/.cxx/
 *.log
+.server-test-data/
+data/
+.env
 rustup-init.exe

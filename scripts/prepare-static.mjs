@@ -29,7 +29,8 @@ html = html.replace(
 );
 html = html.replace(
   /<script>\s*const STORAGE_KEY[\s\S]*?<\/script>\s*<script type="module" src="\.\/sync\/ui\.js"><\/script>/,
-  `<script src="./scripts/attachments.js"></script>
+  `<script src="./scripts/server-auth.js"></script>
+  <script src="./scripts/attachments.js"></script>
   <script src="./scripts/state-migration.js"></script>
   <script src="./scripts/navigation.js"></script>
   <script src="./scripts/domain-renderers.js"></script>

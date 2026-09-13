@@ -1,0 +1,23 @@
+services:
+  phd-workbench:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: phd-workbench
+    restart: unless-stopped
+    ports:
+      - "47637:47637"
+    environment:
+      PHD_WORKBENCH_HOST: 0.0.0.0
+      PHD_WORKBENCH_PORT: 47637
+      PHD_WORKBENCH_DATA_DIR: /data
+      # Set these on first startup to provision the initial administrator.
+      PHD_WORKBENCH_ADMIN_USERNAME: ${PHD_WORKBENCH_ADMIN_USERNAME:-}
+      PHD_WORKBENCH_ADMIN_PASSWORD: ${PHD_WORKBENCH_ADMIN_PASSWORD:-}
+      PHD_WORKBENCH_COOKIE_SECURE: ${PHD_WORKBENCH_COOKIE_SECURE:-0}
+      PHD_WORKBENCH_TRUST_PROXY: ${PHD_WORKBENCH_TRUST_PROXY:-0}
+    volumes:
+      - phd-workbench-data:/data
+
+volumes:
+  phd-workbench-data:
