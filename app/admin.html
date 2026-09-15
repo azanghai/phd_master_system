@@ -1,0 +1,51 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>管理员后台 - 博士工作台</title>
+  <link rel="stylesheet" href="./assets/tailwind.css">
+  <link rel="stylesheet" href="./assets/fontawesome/css/all.min.css">
+  <style>
+    body { margin: 0; background: #f0efe8; color: #2a2b2a; font-family: Consolas, "Microsoft YaHei", sans-serif; }
+    .card { background: #fff; border: 1px solid #dedbd0; border-radius: 1.25rem; padding: 1.25rem; box-shadow: 0 1rem 2.5rem -2rem rgba(42,43,42,.3); }
+    button, input, select { border-radius: .7rem; border: 1px solid #d4d1c7; padding: .65rem .8rem; }
+    button { cursor: pointer; font-weight: 700; background: #3d3929; color: #fff; border-color: #3d3929; }
+    button.secondary { background: #fff; color: #3d3929; }
+    button.danger { background: #8d241a; border-color: #8d241a; }
+    table { width: 100%; border-collapse: collapse; } th, td { text-align: left; padding: .7rem; border-bottom: 1px solid #eeeae0; vertical-align: middle; }
+    .muted { color: #77746a; } .error { color: #9b241a; } .success { color: #21624f; }
+  </style>
+</head>
+<body>
+  <main style="max-width:1200px;margin:0 auto;padding:1.5rem">
+    <header style="display:flex;justify-content:space-between;align-items:center;gap:1rem;margin-bottom:1.5rem">
+      <div><h1 style="margin:0">管理员后台</h1><div id="adminIdentity" class="muted" style="margin-top:.35rem">正在验证权限…</div></div>
+      <div style="display:flex;gap:.5rem"><a class="secondary" style="padding:.65rem .8rem;border:1px solid #d4d1c7;border-radius:.7rem;text-decoration:none;color:#3d3929" href="/">返回工作台</a><button id="logoutButton" class="secondary">退出登录</button></div>
+    </header>
+    <div id="adminMessage" class="muted" style="min-height:1.5rem;margin-bottom:1rem"></div>
+    <section class="card" style="margin-bottom:1.25rem"><h2 style="margin-top:0">系统概览</h2><div id="statsGrid" style="display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:.75rem"></div></section>
+    <section class="card" style="margin-bottom:1.25rem">
+      <h2 style="margin-top:0">创建用户</h2>
+      <form id="createUserForm" style="display:grid;grid-template-columns:repeat(auto-fit,minmax(180px,1fr));gap:.65rem;align-items:end">
+        <label>用户名<input name="username" pattern="[A-Za-z0-9_.-]{3,64}" required></label>
+        <label>初始密码<input name="password" type="password" minlength="12" required></label>
+        <label>角色<select name="role"><option value="user">普通用户</option><option value="admin">管理员</option></select></label>
+        <button>创建账号</button>
+      </form>
+    </section>
+    <section class="card" style="margin-bottom:1.25rem"><h2 style="margin-top:0">用户管理</h2><div style="overflow:auto"><table><thead><tr><th>用户名</th><th>角色</th><th>状态</th><th>创建时间</th><th>操作</th></tr></thead><tbody id="usersBody"></tbody></table></div></section>
+    <section class="card">
+      <h2 style="margin-top:0">数据备份与恢复</h2>
+      <p class="muted">恢复会覆盖当前所有账号和工作区。系统会先自动保存当前备份，恢复后所有账号需要重新登录。</p>
+      <div style="display:flex;flex-wrap:wrap;gap:.65rem;align-items:center">
+        <button id="downloadBackup">下载当前备份</button>
+        <input id="backupFile" type="file" accept=".gz,application/gzip,application/octet-stream">
+        <button id="restoreBackup" class="danger">恢复备份</button>
+      </div>
+      <div id="backupMessage" class="muted" style="margin-top:.75rem"></div>
+    </section>
+  </main>
+  <script src="./scripts/admin.js"></script>
+</body>
+</html>

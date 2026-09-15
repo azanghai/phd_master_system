@@ -4,6 +4,8 @@
   "private": true,
   "description": "PhD Workbench Tauri v2 desktop wrapper",
   "scripts": {
+    "server": "node ./scripts/server.mjs",
+    "test:server": "node --test ./server/*.test.mjs",
     "prepare:static": "node ./scripts/prepare-static.mjs && npm run build:css && node ./scripts/copy-vendor.mjs",
     "build": "npm run prepare:static",
     "build:css": "tailwindcss -c ./tailwind.config.js -i ./app/assets/tailwind.input.css -o ./app/assets/tailwind.css --minify",
@@ -20,7 +22,11 @@
   },
   "dependencies": {
     "@fortawesome/fontawesome-free": "^6.7.2",
-    "chart.js": "^4.4.8"
+    "chart.js": "^4.4.8",
+    "bcryptjs": "^3.0.2",
+    "cookie-parser": "^1.4.7",
+    "express": "^5.1.0",
+    "multer": "^2.0.0"
   },
   "devDependencies": {
     "@capacitor/android": "^8.3.1",
