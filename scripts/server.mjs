@@ -27,6 +27,9 @@ const sessionDays = Number(process.env.PHD_WORKBENCH_SESSION_DAYS || 14);
 const sessionCookie = "phd_session";
 const csrfMethods = new Set(["POST", "PUT", "PATCH", "DELETE"]);
 const secureCookie = process.env.PHD_WORKBENCH_COOKIE_SECURE === "1";
+const publicOrigin = String(process.env.PHD_WORKBENCH_PUBLIC_ORIGIN || "")
+  .trim()
+  .replace(/\/+$/, "");
 const loginAttempts = new Map();
 const LOGIN_WINDOW_MS = 15 * 60 * 1000;
 const LOGIN_LIMIT = 10;
@@ -45,9 +48,15 @@ function jsonError(res, status, code, message) {
 function tokenHash(token) { return crypto.createHash("sha256").update(token).digest("hex"); }
 function sameOrigin(req) {
   const origin = req.get("origin");
-  if (origin) return origin === `${req.protocol}://${req.get("host")}`;
+  if (origin) {
+    if (publicOrigin && origin === publicOrigin) return true;
+    return origin === `${req.protocol}://${req.get("host")}`;
+  }
   const referer = req.get("referer");
-  return !referer || new URL(referer).origin === `${req.protocol}://${req.get("host")}`;
+  if (!referer) return true;
+  const refererOrigin = new URL(referer).origin;
+  return (publicOrigin && refererOrigin === publicOrigin)
+    || refererOrigin === `${req.protocol}://${req.get("host")}`;
 }
 app.use((req, res, next) => {
   if (csrfMethods.has(req.method) && req.path.startsWith("/api/") && !sameOrigin(req)) {

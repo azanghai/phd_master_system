@@ -70,6 +70,14 @@ Origin/Referer。健康检查位于 `/api/health`。可以先复制 `.env.exampl
 映射到公网。SQLite 和附件位于 `/data`，请在飞牛 OS 中定期备份
 该数据目录。
 
+如果通过 cpolar 等隧道访问，建议额外设置公网 Origin（不要带末尾斜杠），例如：
+
+```env
+PHD_WORKBENCH_COOKIE_SECURE=1
+PHD_WORKBENCH_TRUST_PROXY=1
+PHD_WORKBENCH_PUBLIC_ORIGIN=https://phdsys.vip.cpolar.top
+```
+
 更新后如果仍然直接进入页面、没有登录框或看不到其他设备的数据，请确认运行的是
 Node 服务端容器，而不是旧的静态 HTML 服务，并强制重建：
 
