@@ -27,6 +27,10 @@
       #serverAuthCard input { width: 100%; box-sizing: border-box; border: 1px solid #d8d5ca; border-radius: .75rem; padding: .75rem; margin-top: .35rem; }
       #serverAuthCard button { width: 100%; border: 0; border-radius: .75rem; padding: .8rem; margin-top: 1rem; background: #3d3929; color: #fff; font-weight: 700; cursor: pointer; }
       #serverAuthError { min-height: 1.4rem; color: #9b241a; margin-top: .8rem; font-size: .9rem; }
+      #serverUserControls { position: fixed; top: 1rem; right: 1rem; z-index: 9998; display: flex; align-items: center; gap: .65rem; padding: .55rem .65rem .55rem .9rem; border: 1px solid rgba(61,57,41,.16); border-radius: 999px; background: rgba(248,247,242,.94); color: #3d3929; box-shadow: 0 .5rem 1.5rem rgba(0,0,0,.12); font: 700 14px sans-serif; }
+      #serverUserControls button, #serverUserControls a { border: 0; border-radius: 999px; padding: .45rem .8rem; background: #3d3929; color: #fff; font: inherit; text-decoration: none; cursor: pointer; }
+      #serverUserControls button:disabled { opacity: .6; cursor: wait; }
+      @media (max-width: 640px) { #serverUserControls { top: .6rem; right: .6rem; max-width: calc(100vw - 1.2rem); font-size: 12px; } #serverUserControls span { max-width: 9rem; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; } }
     `;
     document.head.appendChild(style);
   }
@@ -62,7 +66,7 @@
           });
           currentUser = result.user;
           overlay.remove();
-          addAdminLink();
+          renderUserControls();
           resolve(currentUser);
         } catch (err) {
           error.textContent = err.message;
@@ -78,22 +82,51 @@
     if (currentUser) return currentUser;
     try {
       currentUser = (await api('/auth/me')).user;
-      addAdminLink();
+      renderUserControls();
       return currentUser;
     } catch (err) {
       if (err.status !== 401) throw err;
       return await showLogin();
     }
 
-    function addAdminLink() {
-      if (currentUser?.role !== 'admin' || document.getElementById('serverAdminLink')) return;
-      const link = document.createElement('a');
-      link.id = 'serverAdminLink';
-      link.href = '/admin.html';
-      link.textContent = '管理后台';
-      link.style.cssText = 'position:fixed;right:1rem;bottom:1rem;z-index:9998;padding:.65rem 1rem;border-radius:999px;background:#3d3929;color:#fff;text-decoration:none;font:700 14px sans-serif;box-shadow:0 .5rem 1.5rem rgba(0,0,0,.2)';
-      document.body.appendChild(link);
-    }
+  }
+
+  function renderUserControls() {
+    if (!currentUser || document.getElementById('serverUserControls')) return;
+    ensureStyles();
+    const controls = document.createElement('div');
+    controls.id = 'serverUserControls';
+    const roleLabel = currentUser.role === 'admin' ? '管理员' : '普通用户';
+    controls.innerHTML = `
+      <span title="${escapeHtml(currentUser.username)}">当前账号：${escapeHtml(currentUser.username)}（${roleLabel}）</span>
+      ${currentUser.role === 'admin' ? '<a href="/admin.html">管理后台</a>' : ''}
+      <button type="button" id="serverLogoutButton">退出登录</button>
+    `;
+    document.body.appendChild(controls);
+    controls.querySelector('#serverLogoutButton').addEventListener('click', async (event) => {
+      const button = event.currentTarget;
+      button.disabled = true;
+      try {
+        await api('/auth/logout', { method: 'POST' });
+        currentUser = null;
+        loginPromise = null;
+        controls.remove();
+        window.location.reload();
+      } catch (error) {
+        button.disabled = false;
+        window.alert(`退出登录失败：${error.message}`);
+      }
+    });
+  }
+
+  function escapeHtml(value) {
+    return String(value).replace(/[&<>"']/g, (character) => ({
+      '&': '&amp;',
+      '<': '&lt;',
+      '>': '&gt;',
+      '"': '&quot;',
+      "'": '&#39;',
+    }[character]));
   }
 
   async function requestWorkspace() {
