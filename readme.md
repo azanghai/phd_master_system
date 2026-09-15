@@ -59,6 +59,19 @@ Origin/Referer。健康检查位于 `/api/health`。可以先复制 `.env.exampl
 映射到公网。SQLite 和附件位于 `/data`，请在飞牛 OS 中定期备份
 `phd-workbench-data` 卷。
 
+更新后如果仍然直接进入页面、没有登录框或看不到其他设备的数据，请确认运行的是
+Node 服务端容器，而不是旧的静态 HTML 服务，并强制重建：
+
+```bash
+docker compose down
+docker compose build --no-cache
+docker compose up -d
+```
+
+随后在浏览器执行强制刷新（Windows/Linux 使用 `Ctrl+F5`，macOS 使用
+`Cmd+Shift+R`）。正常情况下首页会先显示登录框，登录后设置中的存储方式显示为
+“NAS 服务端 SQLite”。也可以访问 `/api/health` 确认请求到达 Node 服务端。
+
 ## macOS 打包说明
 
 macOS 下载版如果未签名，可能会被系统提示“应用已损坏，无法打开”。`npm run desktop:build:mac` 在没有配置 Apple 证书时会自动使用 ad-hoc 签名，适合内部测试；正式对外分发仍建议配置 Apple Developer ID 证书并完成公证。

@@ -1493,6 +1493,9 @@ const STORAGE_KEY = 'phd_master_workspace_merged_v1';
     }
 
     const state = loadState();
+    let serverWorkspaceVersion = 0;
+    let serverSaveTimer = null;
+    let serverSaveInFlight = false;
     let workflowSelectedProjectId = '';
 
     function replaceState(nextState) {
@@ -1507,6 +1510,36 @@ const STORAGE_KEY = 'phd_master_workspace_merged_v1';
     function persistStateToLocal(raw) {
       localStorage.setItem(STORAGE_KEY, raw);
       storageMeta.lastSavedAt = nowDateTime();
+    }
+    function queueServerStatePersist() {
+      const server = window.PhdWorkbenchServer;
+      if (!server?.enabled) return;
+      if (serverSaveTimer) clearTimeout(serverSaveTimer);
+      serverSaveTimer = setTimeout(async () => {
+        if (serverSaveInFlight) {
+          queueServerStatePersist();
+          return;
+        }
+        serverSaveInFlight = true;
+        try {
+          const result = await server.saveWorkspace(buildStateFromParsed(JSON.parse(serializeState())), serverWorkspaceVersion);
+          serverWorkspaceVersion = Number(result.version) || serverWorkspaceVersion;
+          storageMeta.backend = 'NAS 服务端 SQLite';
+          storageMeta.syncState = `已保存到服务端（版本 ${serverWorkspaceVersion}）`;
+        } catch (err) {
+          console.error(err);
+          if (err.status === 409) {
+            storageMeta.syncState = '检测到其他设备更新，请刷新后重试';
+            alert('其他设备已经修改了数据。为避免覆盖，请刷新页面后再继续。');
+          } else {
+            storageMeta.syncState = `服务端保存失败：${err.message || err}`;
+          }
+        } finally {
+          serverSaveInFlight = false;
+          serverSaveTimer = null;
+          if (isSectionVisible('settings-section')) refreshSettings();
+        }
+      }, 500);
     }
     function queueJsonFilePersist(raw = serializeState()) {
       if (!isTauriRuntime()) return Promise.resolve(null);
@@ -1533,6 +1566,26 @@ const STORAGE_KEY = 'phd_master_workspace_merged_v1';
       });
     }
     async function hydrateStateFromJson() {
+      if (window.PhdWorkbenchServer?.enabled) {
+        try {
+          const result = await window.PhdWorkbenchServer.loadWorkspace();
+          serverWorkspaceVersion = Number(result.version) || 0;
+          replaceState(buildStateFromParsed(result.state || {}));
+          persistStateToLocal(serializeState());
+          storageMeta.backend = 'NAS 服务端 SQLite';
+          storageMeta.syncState = `已从服务端加载（版本 ${serverWorkspaceVersion}）`;
+          storageMeta.lastLoadedAt = nowDateTime();
+          renderAll();
+        } catch (err) {
+          console.error(err);
+          storageMeta.backend = 'NAS 服务端 SQLite';
+          storageMeta.syncState = `服务端加载失败：${err.message || err}`;
+          document.body.dataset.serverLoadError = 'true';
+        } finally {
+          if (isSectionVisible('settings-section')) refreshSettings();
+        }
+        return;
+      }
       if (!isTauriRuntime()) {
         storageMeta.backend = '浏览器本地缓存';
         storageMeta.syncState = '当前为浏览器缓存模式';
@@ -1579,6 +1632,7 @@ const STORAGE_KEY = 'phd_master_workspace_merged_v1';
       const raw = serializeState();
       persistStateToLocal(raw);
       queueJsonFilePersist(raw);
+      queueServerStatePersist();
       window.PhdWorkbenchSyncAdapter?.notifyLocalChange?.();
       if (isSectionVisible('settings-section')) refreshSettings();
     }

@@ -120,4 +120,10 @@
       return await api('/workspace', { method: 'DELETE' });
     },
   };
+
+  // Start the production login gate before the workbench initializes.
+  authenticate().catch((error) => {
+    console.error(error);
+    document.body.dataset.serverAuthError = 'true';
+  });
 })();
