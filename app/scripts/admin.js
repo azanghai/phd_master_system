@@ -46,6 +46,7 @@
   }
   async function load() {
     try {
+      if (window.PhdWorkbenchServer) await window.PhdWorkbenchServer.authenticate();
       const me = await api('/auth/me');
       if (me.user?.role !== 'admin') { location.href = '/'; return; }
       $('adminIdentity').textContent = `当前管理员：${me.user.username}`;
