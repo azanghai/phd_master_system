@@ -38,7 +38,7 @@ npm run cap:sync:android
 ## Docker / NAS 部署
 
 项目通过 Docker 运行 Node 服务端，使用构建后的 `app/index.html`，SQLite 数据库和
-附件保存在 `phd-workbench-data` 持久卷中：
+附件保存在 Compose 配置映射到容器 `/data` 的目录中：
 
 ```bash
 docker compose up -d --build
@@ -46,6 +46,17 @@ docker compose up -d --build
 
 启动后访问 `http://NAS_IP:47637/`。在飞牛 OS 中可以将 `compose.yaml` 所在目录
 作为项目目录导入 Docker/Compose 管理器，或在 NAS 终端执行上面的命令。
+建议在 `.env` 中设置明确的数据目录，例如：
+
+```env
+PHD_WORKBENCH_DATA_PATH=/vol1/1000/docker/phd-workbench-data
+```
+
+并提前创建该目录：
+
+```bash
+mkdir -p /vol1/1000/docker/phd-workbench-data
+```
 
 首次启动前设置 `PHD_WORKBENCH_ADMIN_USERNAME` 和
 `PHD_WORKBENCH_ADMIN_PASSWORD`（至少 12 个字符）即可自动创建管理员。服务端 API
@@ -57,7 +68,7 @@ Origin/Referer。健康检查位于 `/api/health`。可以先复制 `.env.exampl
 直接局域网访问时保持 `PHD_WORKBENCH_COOKIE_SECURE=0`。如果通过飞牛 OS 反向代理并
 启用 HTTPS，将这两个变量设为 `1`，然后只对外暴露 HTTPS 端口，不要把应用端口直接
 映射到公网。SQLite 和附件位于 `/data`，请在飞牛 OS 中定期备份
-`phd-workbench-data` 卷。
+该数据目录。
 
 更新后如果仍然直接进入页面、没有登录框或看不到其他设备的数据，请确认运行的是
 Node 服务端容器，而不是旧的静态 HTML 服务，并强制重建：
