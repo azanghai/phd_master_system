@@ -4,11 +4,46 @@
   const api = async (path, options = {}) => {
     const response = await fetch(`/api${path}`, { credentials: 'same-origin', ...options });
     const body = await response.json().catch(() => ({}));
-    if (!response.ok) throw new Error(body.error?.message || body.error || `请求失败（${response.status}）`);
+    if (!response.ok) {
+      const error = new Error(body.error?.message || body.error || `请求失败（${response.status}）`);
+      error.status = response.status;
+      throw error;
+    }
     return body;
   };
   const format = (value) => value ? new Date(value).toLocaleString() : '-';
   function statCard(label, value) { return `<div style="background:#f7f6f1;border-radius:.9rem;padding:.8rem"><div class="muted">${label}</div><strong style="font-size:1.5rem">${value ?? 0}</strong></div>`; }
+  let loginPromise = null;
+  function showLogin() {
+    if (loginPromise) return loginPromise;
+    loginPromise = new Promise((resolve) => {
+      const overlay = $('adminLoginOverlay');
+      const form = $('adminLoginCard');
+      const error = $('adminLoginError');
+      overlay.hidden = false;
+      form.onsubmit = async (event) => {
+        event.preventDefault();
+        const button = form.querySelector('button');
+        button.disabled = true;
+        error.textContent = '';
+        try {
+          await api('/auth/login', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ username: form.username.value, password: form.password.value }),
+          });
+          overlay.hidden = true;
+          loginPromise = null;
+          resolve();
+        } catch (loginError) {
+          error.textContent = loginError.message;
+          button.disabled = false;
+        }
+      };
+      form.username.focus();
+    });
+    return loginPromise;
+  }
   async function load() {
     try {
       const me = await api('/auth/me');
@@ -34,7 +69,13 @@
           <td style="white-space:nowrap"><button class="secondary" data-toggle="${user.id}" ${user.id === me.user.id ? 'disabled' : ''}>${user.disabledAt ? '启用' : '停用'}</button> <button class="secondary" data-reset="${user.id}">重置密码</button></td>
         </tr>`).join('');
       bindUserActions();
-    } catch (error) { message(error.message, 'error'); }
+    } catch (error) {
+      if (error.status === 401) {
+        await showLogin();
+        return load();
+      }
+      message(error.message, 'error');
+    }
   }
   function escapeHtml(value) { return String(value ?? '').replace(/[&<>"']/g, (char) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[char])); }
   function bindUserActions() {

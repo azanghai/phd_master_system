@@ -15,6 +15,11 @@
     button.danger { background: #8d241a; border-color: #8d241a; }
     table { width: 100%; border-collapse: collapse; } th, td { text-align: left; padding: .7rem; border-bottom: 1px solid #eeeae0; vertical-align: middle; }
     .muted { color: #77746a; } .error { color: #9b241a; } .success { color: #21624f; }
+    #adminLoginOverlay { position: fixed; inset: 0; z-index: 10; display: grid; place-items: center; padding: 1rem; background: rgba(42,43,42,.72); }
+    #adminLoginOverlay[hidden] { display: none; }
+    #adminLoginCard { width: min(100%, 28rem); box-sizing: border-box; border-radius: 1.5rem; padding: 2rem; background: #fff; box-shadow: 0 2rem 5rem rgba(0,0,0,.25); }
+    #adminLoginCard input { width: 100%; box-sizing: border-box; margin-top: .35rem; }
+    #adminLoginError { min-height: 1.4rem; margin-top: .8rem; }
   </style>
 </head>
 <body>
@@ -46,6 +51,16 @@
       <div id="backupMessage" class="muted" style="margin-top:.75rem"></div>
     </section>
   </main>
+  <div id="adminLoginOverlay" hidden>
+    <form id="adminLoginCard">
+      <h2 style="margin:0 0 .5rem">登录管理后台</h2>
+      <p class="muted" style="margin:0 0 1.5rem">请输入管理员账号后继续</p>
+      <label>用户名<input name="username" autocomplete="username" required></label>
+      <label style="display:block;margin-top:1rem">密码<input name="password" type="password" autocomplete="current-password" required></label>
+      <div id="adminLoginError" class="error"></div>
+      <button type="submit" style="width:100%">登录</button>
+    </form>
+  </div>
   <script src="./scripts/admin.js"></script>
 </body>
 </html>
