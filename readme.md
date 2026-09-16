@@ -75,7 +75,7 @@ Origin/Referer。健康检查位于 `/api/health`。可以先复制 `.env.exampl
 ```env
 PHD_WORKBENCH_COOKIE_SECURE=1
 PHD_WORKBENCH_TRUST_PROXY=1
-PHD_WORKBENCH_PUBLIC_ORIGIN=https://phdsys.vip.cpolar.top
+PHD_WORKBENCH_PUBLIC_ORIGIN=https://[your URL]
 ```
 
 更新后如果仍然直接进入页面、没有登录框或看不到其他设备的数据，请确认运行的是
